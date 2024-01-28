@@ -16,6 +16,8 @@
 package com.example.android.wearable.alpha
 
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -23,6 +25,7 @@ import android.graphics.Path
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
+import android.os.BatteryManager
 import android.util.Log
 import android.view.SurfaceHolder
 import androidx.core.content.ContextCompat
@@ -320,12 +323,26 @@ class AnalogWatchCanvasRenderer(
         /**
          * display the battery percentage in the canvas
          */
-        drawBatteryPercentage(canvas, bounds, "56")
+        drawBatteryPercentage(canvas, bounds, getWatchBatteryLevel(context).toString())
 
         /**
          * display number of steps in the canvas
          */
         drawNumberOfSteps(canvas, bounds, "37,565")
+    }
+
+    private fun getWatchBatteryLevel(context: Context): Int {
+        val batteryIntent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        val level = batteryIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+        val scale = batteryIntent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+
+        return if (level != -1 && scale != -1) {
+            // Calculate battery percentage
+            (level.toFloat() / scale.toFloat() * 100).toInt()
+        } else {
+            // Unable to retrieve battery level
+            -1
+        }
     }
 
     private fun drawNumberOfSteps(canvas: Canvas, bounds: Rect, s: String) {
