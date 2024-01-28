@@ -223,7 +223,7 @@ class AnalogWatchCanvasRenderer(
 
     override fun onDestroy() {
         Log.d(TAG, "onDestroy()")
-        scope.cancel("AnalogWatchCanvasRenderer scope clear() request")
+        scope.cancel("DigitalWatchCanvasRenderer scope clear() request")
         super.onDestroy()
     }
 
@@ -309,7 +309,7 @@ class AnalogWatchCanvasRenderer(
         drawNextScheduleAndCurrentHabits(
             canvas,
             bounds,
-            "Next Schedule",
+            "Next Schedule Item Name",
             "16:55 - 17:30",
             "Check Email",
             "Post Update",
@@ -323,23 +323,8 @@ class AnalogWatchCanvasRenderer(
     private fun drawBatteryPercentage(
         canvas: Canvas,
         bounds: Rect,
-        batteryPercentage : String
+        batteryPercentage: String
     ) {
-
-        // Draw an image at the left
-//        val logoDrawable = getLogoDrawable() // Replace this with your method to get the logo drawable
-//        val logoWidth = logoDrawable.intrinsicWidth
-//        val logoHeight = logoDrawable.intrinsicHeight
-//        val logoLeft = centerX - logoWidth - 10f // Adjust the horizontal position
-//        val logoTop = centerY - logoHeight / 2
-//        logoDrawable.setBounds(
-//            logoLeft.toInt(),
-//            logoTop.toInt(),
-//            (logoLeft + logoWidth).toInt(),
-//            (logoTop + logoHeight).toInt()
-//        )
-//        logoDrawable.draw(canvas)
-
         val textPaint = Paint().apply {
             color = Color.WHITE
             textAlign = Paint.Align.LEFT
@@ -347,9 +332,23 @@ class AnalogWatchCanvasRenderer(
         }
 
         val text = "$batteryPercentage%"
-        val textX = 10f // Adjust the horizontal position
-        val textY = centerY + 10f // Adjust the vertical position
+        val textX = 40f // Adjust the horizontal position
+        val textY = centerY - 10f // Adjust the vertical position
         canvas.drawText(text, textX, textY, textPaint)
+
+        // Draw an image on the left side of the text
+        val logoDrawable = getLogoDrawable(R.drawable.heartbeat) // Replace this with your method to get the logo drawable
+        val logoWidth = 25
+        val logoHeight = 25
+        val logoLeft = 10f // Adjust the horizontal position
+        val logoTop = bounds.exactCenterY() - 30f
+        logoDrawable.setBounds(
+            logoLeft.toInt(),
+            logoTop.toInt(),
+            (logoLeft + logoWidth).toInt(),
+            (logoTop + logoHeight).toInt()
+        )
+        logoDrawable.draw(canvas)
     }
 
     private fun drawNextScheduleAndCurrentHabits(
@@ -437,12 +436,10 @@ class AnalogWatchCanvasRenderer(
         val spaceBetweenTextAndLogo = 40
 
         // Draw a simple logo to the right of the text with added spacing
-        val logoDrawable =
-            getLogoDrawable() // Replace this with your method to get the logo drawable
+        val logoDrawable = getLogoDrawable(R.drawable.heartbeat) // Replace this with your method to get the logo drawable
         val logoWidth = 25
         val logoHeight = 25
-        val logoLeft =
-            textRight - logoWidth - spaceBetweenTextAndLogo // Adjust the horizontal position
+        val logoLeft = textRight - logoWidth - spaceBetweenTextAndLogo // Adjust the horizontal position
         val logoTop = centerYLogo - (logoHeight / 2) + 2 // Adjust the vertical position
         logoDrawable.setBounds(
             logoLeft.toInt(), logoTop.toInt(),
@@ -486,8 +483,8 @@ class AnalogWatchCanvasRenderer(
         canvas.drawArc(arcRect, -120f, progress, false, paint) // -90f for top-aligned arc
     }
 
-    private fun getLogoDrawable(): Drawable {
-        return ContextCompat.getDrawable(context, R.drawable.heartbeat)!!
+    private fun getLogoDrawable(itemName : Int): Drawable {
+        return ContextCompat.getDrawable(context, itemName)!!
     }
 
     private fun drawDate(canvas: Canvas, bounds: Rect) {
