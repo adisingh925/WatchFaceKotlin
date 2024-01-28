@@ -86,4 +86,6 @@ dependencies {
     implementation libs.wear.watchface.data
     implementation libs.wear.watchface.editor
     implementation libs.wear.watchface.style
+    implementation libs.play.services.fitness
+    implementation libs.play.services.auth
 }

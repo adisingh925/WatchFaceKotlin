@@ -10,6 +10,8 @@ compose = "1.5.0-beta01"
 ktlint = "0.50.0"
 org-jetbrains-kotlin = "1.9.21"
 org-jetbrains-kotlinx = "1.7.3"
+play-services-fitness = "21.1.0"
+play-services-auth = "20.7.0"
 
 [libraries]
 android-lint-gradle = "com.android.tools.lint:lint-gradle:31.2.2"
@@ -34,6 +36,8 @@ wear-watchface-complications-rendering = { module = "androidx.wear.watchface:wat
 wear-watchface-data = { module = "androidx.wear.watchface:watchface-data", version.ref = "androidx-wear-watchface" }
 wear-watchface-editor = { module = "androidx.wear.watchface:watchface-editor", version.ref = "androidx-wear-watchface" }
 wear-watchface-style = { module = "androidx.wear.watchface:watchface-style", version.ref = "androidx-wear-watchface" }
+play-services-fitness = { group = "com.google.android.gms", name = "play-services-fitness", version.ref = "play-services-fitness" }
+play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "play-services-auth" }
 
 [plugins]
 com-android-application = { id = "com.android.application", version.ref = "android-gradle-plugin" }
