@@ -46,11 +46,19 @@ import com.example.android.wearable.alpha.data.watchface.WatchFaceData
 import com.example.android.wearable.alpha.utils.COLOR_STYLE_SETTING
 import com.example.android.wearable.alpha.utils.DRAW_HOUR_PIPS_STYLE_SETTING
 import com.example.android.wearable.alpha.utils.WATCH_HAND_LENGTH_STYLE_SETTING
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.fitness.Fitness
+import com.google.android.gms.fitness.FitnessOptions
+import com.google.android.gms.fitness.data.DataType
+import com.google.android.gms.fitness.request.OnDataPointListener
+import com.google.android.gms.fitness.request.SensorRequest
 import java.text.SimpleDateFormat
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlinx.coroutines.CoroutineScope
@@ -115,6 +123,7 @@ class AnalogWatchCanvasRenderer(
     // Used to paint the main hour hand text with the hour pips, i.e., 3, 6, 9, and 12 o'clock.
     private val textPaint = Paint().apply {
         isAntiAlias = true
+        color = Color.WHITE
         textSize = context.resources.getDimensionPixelSize(R.dimen.hour_mark_size).toFloat()
     }
 
@@ -124,6 +133,11 @@ class AnalogWatchCanvasRenderer(
     private lateinit var minuteHandBorder: Path
     private lateinit var secondHand: Path
 
+    private var currentHeartRate: Int = 0
+    private var progress: Float = 0f
+    private var stepCount: Int = 0
+    private val MAX_HEART_RATE = 220
+
     // Changed when setting changes cause a change in the minute hand arm (triggered by user in
     // updateUserStyle() via userStyleRepository.addUserStyleListener()).
     private var armLengthChangedRecalculateClockHands: Boolean = false
@@ -132,11 +146,73 @@ class AnalogWatchCanvasRenderer(
     // valid dimensions from the system.
     private var currentWatchFaceSize = Rect(0, 0, 0, 0)
 
+    private val onDataPointListener = OnDataPointListener { dataPoint ->
+        // Handle the incoming data point
+        dataPoint.dataType.fields.forEach { field ->
+            when (field.name) {
+                "steps" -> {
+                    val stepsField = dataPoint.getValue(field)
+                    stepCount = stepsField.asInt()
+                    invalidate() // Trigger a redraw when step count is updated
+                }
+
+                "heart_rate" -> {
+                    val heartRateField = dataPoint.getValue(field)
+                    currentHeartRate = heartRateField.asFloat().toInt()
+                    progress = currentHeartRate.toFloat() / MAX_HEART_RATE.toFloat()
+                    invalidate() // Trigger a redraw when heart rate is updated
+                }
+            }
+        }
+    }
+
+    private fun subscribeToStepCount() {
+        // Create a sensor request for step count
+        val sensorRequest = SensorRequest.Builder()
+            .setDataType(DataType.TYPE_STEP_COUNT_CUMULATIVE)
+            .setSamplingRate(3, TimeUnit.SECONDS) // Adjust sampling rate as needed
+            .build()
+
+        // Subscribe to step count updates
+        getGoogleAccount().let {
+            Fitness.getSensorsClient(context, it)
+                .add(sensorRequest, onDataPointListener)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Log.d(TAG, "Successfully subscribed to step count updates!")
+                    } else {
+                        Log.d(TAG, "There was a problem subscribing to step count updates.")
+                    }
+                }
+        }
+    }
+
     init {
         scope.launch {
             currentUserStyleRepository.userStyle.collect { userStyle ->
                 updateWatchFaceData(userStyle)
             }
+        }
+    }
+
+    private fun subscribeToHeartRate() {
+        // Create a sensor request for heart rate
+        val sensorRequest = SensorRequest.Builder()
+            .setDataType(DataType.TYPE_HEART_RATE_BPM)
+            .setSamplingRate(3, TimeUnit.SECONDS) // Adjust sampling rate as needed
+            .build()
+
+        // Register listener for heart rate updates
+        getGoogleAccount().let {
+            Fitness.getSensorsClient(context, it)
+                .add(sensorRequest, onDataPointListener)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Log.d(TAG, "Successfully subscribed to heart rate updates!")
+                    } else {
+                        Log.d(TAG, "There was a problem subscribing to heart rate updates.")
+                    }
+                }
         }
     }
 
@@ -297,7 +373,7 @@ class AnalogWatchCanvasRenderer(
         /**
          * display the heartbeat and the logo in the canvas
          */
-        displayHeartbeatAndLogo(canvas, bounds, "98")
+        displayHeartbeatAndLogo(canvas, bounds, "999")
 
         /**
          * display the progress arc in the canvas
@@ -327,6 +403,29 @@ class AnalogWatchCanvasRenderer(
          * display number of steps in the canvas
          */
         drawNumberOfSteps(canvas, bounds, "37,565")
+
+        /**
+         * display the text at the top of the canvas
+         */
+        displayCurrentScheduleWithTime(canvas, bounds)
+    }
+
+    private fun displayCurrentScheduleWithTime(canvas: Canvas, bounds: Rect) {
+        val heartbeatPaint = Paint().apply {
+            color = Color.WHITE // Adjust the color as needed
+            textAlign = Paint.Align.CENTER // Align the text to the right
+            textSize = 12f // Adjust the text size as needed
+        }
+
+        // Draw two lines of text at the top
+        val text1 = "Schedule Item Name"
+        val text2 = "45m | 16:10 - 16:55"
+
+        val text1Y = bounds.top + 40f // Adjust the vertical position of the first line
+        val text2Y = bounds.top + 55f // Adjust the vertical position of the second line
+
+        canvas.drawText(text1, bounds.exactCenterX(), text1Y, heartbeatPaint)
+        canvas.drawText(text2, bounds.exactCenterX(), text2Y, heartbeatPaint)
     }
 
     private fun getWatchBatteryLevel(context: Context): Int {
@@ -350,13 +449,11 @@ class AnalogWatchCanvasRenderer(
             textSize = 15f // Adjust the text size as needed
         }
 
-        val logoDrawable =
-            getLogoDrawable(R.drawable.heartbeat) // Replace this with your method to get the logo drawable
+        val logoDrawable = getLogoDrawable(R.drawable.walk) // Replace this with your method to get the logo drawable
         val logoWidth = 20
         val logoHeight = 20
 
-        val logoLeft =
-            bounds.right.toFloat() - logoWidth - 60f // Adjust the horizontal position to the right
+        val logoLeft = bounds.right.toFloat() - logoWidth - 60f // Adjust the horizontal position to the right
         val logoTop = bounds.centerY() - logoHeight / 2 - 17 // Center the image vertically
 
         logoDrawable.setBounds(
@@ -367,9 +464,8 @@ class AnalogWatchCanvasRenderer(
         )
         logoDrawable.draw(canvas)
 
-        val additionalTextX = logoLeft + logoWidth + 5f // Adjust the horizontal position
-        val additionalTextY =
-            bounds.centerY() + heartbeatPaint.textSize / 2 - 20 // Center the additional text vertically
+        val additionalTextX = logoLeft + logoWidth // Adjust the horizontal position
+        val additionalTextY = bounds.centerY() + heartbeatPaint.textSize / 2 - 20 // Center the additional text vertically
 
         // Draw the additional text
         canvas.drawText(s, additionalTextX, additionalTextY, heartbeatPaint)
@@ -387,13 +483,12 @@ class AnalogWatchCanvasRenderer(
         }
 
         val text = "$batteryPercentage%"
-        val textX = 35f // Adjust the horizontal position
-        val textY = centerY - 15f // Adjust the vertical position
+        val textX = 30f // Adjust the horizontal position
+        val textY = centerY - 14f // Adjust the vertical position
         canvas.drawText(text, textX, textY, textPaint)
 
         // Draw an image on the left side of the text
-        val logoDrawable =
-            getLogoDrawable(R.drawable.heartbeat) // Replace this with your method to get the logo drawable
+        val logoDrawable = getLogoDrawable(R.drawable.battery) // Replace this with your method to get the logo drawable
         val logoWidth = 20
         val logoHeight = 20
         val logoLeft = 10f // Adjust the horizontal position
@@ -474,13 +569,11 @@ class AnalogWatchCanvasRenderer(
             textSize = 15f // Adjust the text size as needed
         }
 
-        val logoDrawable =
-            getLogoDrawable(R.drawable.heartbeat) // Replace this with your method to get the logo drawable
+        val logoDrawable = getLogoDrawable(R.drawable.heartbeat) // Replace this with your method to get the logo drawable
         val logoWidth = 20
         val logoHeight = 20
 
-        val logoLeft =
-            bounds.right.toFloat() - logoWidth - 60f // Adjust the horizontal position to the right
+        val logoLeft = bounds.right.toFloat() - logoWidth - 50f // Adjust the horizontal position to the right
         val logoTop = bounds.centerY() - logoHeight / 2 - 40 // Center the image vertically
 
         logoDrawable.setBounds(
@@ -492,8 +585,7 @@ class AnalogWatchCanvasRenderer(
         logoDrawable.draw(canvas)
 
         val additionalTextX = logoLeft + logoWidth + 5f // Adjust the horizontal position
-        val additionalTextY =
-            bounds.centerY() + heartbeatPaint.textSize / 2 - 42 // Center the additional text vertically
+        val additionalTextY = bounds.centerY() + heartbeatPaint.textSize / 2 - 42 // Center the additional text vertically
 
         // Draw the additional text
         canvas.drawText(heartBeat, additionalTextX, additionalTextY, heartbeatPaint)
@@ -517,6 +609,13 @@ class AnalogWatchCanvasRenderer(
             strokeCap = Paint.Cap.ROUND
         }
 
+        val linePaint = Paint().apply {
+            color = Color.argb(128, 128, 128, 128) // Color of the radial lines
+            style = Paint.Style.STROKE
+            strokeWidth = 2f // Adjust line stroke width as needed
+            strokeCap = Paint.Cap.ROUND
+        }
+
         val centerX = bounds.centerX().toFloat()
         val centerY = bounds.centerY().toFloat()
 
@@ -532,6 +631,36 @@ class AnalogWatchCanvasRenderer(
 
         canvas.drawArc(arcRect, -120f, 60f, false, totalPathPaint)
         canvas.drawArc(arcRect, -120f, progress, false, paint) // -90f for top-aligned arc
+
+        // Draw thin radial lines inside the arc
+        for (i in 0 until 5) {
+            val angle = -120f + (i.toFloat() / (5 - 1)) * 60f // Distribute lines evenly inside the arc
+            val startX = centerX + (progressRadius + 6f) * cos(Math.toRadians(angle.toDouble())).toFloat()
+            val startY = centerY + (progressRadius + 6f) * sin(Math.toRadians(angle.toDouble())).toFloat()
+            val endX = centerX + (progressRadius - 7f) * cos(Math.toRadians(angle.toDouble())).toFloat()
+            val endY = centerY + (progressRadius - 7f) * sin(Math.toRadians(angle.toDouble())).toFloat()
+
+            canvas.drawLine(startX, startY, endX, endY, linePaint)
+        }
+
+        // Draw time text at each end of the progress bar
+        val textAtStart = "+25"
+        val textAtEnd = "-30"
+
+        val textStartX = centerX - progressRadius * cos(Math.toRadians(120.0)).toFloat() // Adjust horizontal position
+        val textStartY = centerY - progressRadius * sin(Math.toRadians(120.0)).toFloat() + 25f // Adjust vertical position
+
+        val textEndX = centerX + progressRadius * cos(Math.toRadians(-120.0)).toFloat() // Adjust horizontal position
+        val textEndY = centerY + progressRadius * sin(Math.toRadians(-60.0)).toFloat() + 25f // Adjust vertical position
+
+        val textPaint = Paint().apply {
+            color = Color.WHITE
+            textAlign = Paint.Align.CENTER
+            textSize = 15f
+        }
+
+        canvas.drawText(textAtStart, textStartX, textStartY, textPaint)
+        canvas.drawText(textAtEnd, textEndX, textEndY, textPaint)
     }
 
     private fun getLogoDrawable(itemName: Int): Drawable {
@@ -808,6 +937,15 @@ class AnalogWatchCanvasRenderer(
             radiusFraction * bounds.width(),
             outerElementPaint
         )
+    }
+
+    private val fitnessOptions = FitnessOptions.builder()
+        .addDataType(DataType.TYPE_HEART_RATE_BPM, FitnessOptions.ACCESS_READ)
+        .addDataType(DataType.TYPE_STEP_COUNT_DELTA, FitnessOptions.ACCESS_READ)
+        .build()
+
+    private fun getGoogleAccount(): GoogleSignInAccount {
+        return GoogleSignIn.getAccountForExtension(context, fitnessOptions)
     }
 
     companion object {
