@@ -296,7 +296,7 @@ class AnalogWatchCanvasRenderer(
         /**
          * display the heartbeat and the logo in the canvas
          */
-        displayHeartbeatAndLogo(canvas, bounds, "999")
+        displayHeartbeatAndLogo(canvas, bounds, "98")
 
         /**
          * display the progress arc in the canvas
@@ -317,7 +317,44 @@ class AnalogWatchCanvasRenderer(
             "Meeting"
         )
 
-        drawBatteryPercentage(canvas, bounds, "100")
+        /**
+         * display the battery percentage in the canvas
+         */
+        drawBatteryPercentage(canvas, bounds, "56")
+
+        /**
+         * display number of steps in the canvas
+         */
+        drawNumberOfSteps(canvas, bounds, "37,565")
+    }
+
+    private fun drawNumberOfSteps(canvas: Canvas, bounds: Rect, s: String) {
+        val heartbeatPaint = Paint().apply {
+            color = Color.WHITE // Adjust the color as needed
+            textAlign = Paint.Align.LEFT // Align the text to the right
+            textSize = 15f // Adjust the text size as needed
+        }
+
+        val logoDrawable = getLogoDrawable(R.drawable.heartbeat) // Replace this with your method to get the logo drawable
+        val logoWidth = 20
+        val logoHeight = 20
+
+        val logoLeft = bounds.right.toFloat() - logoWidth - 60f // Adjust the horizontal position to the right
+        val logoTop = bounds.centerY() - logoHeight / 2 - 17 // Center the image vertically
+
+        logoDrawable.setBounds(
+            logoLeft.toInt(),
+            logoTop,
+            (logoLeft + logoWidth).toInt(),
+            (logoTop + logoHeight)
+        )
+        logoDrawable.draw(canvas)
+
+        val additionalTextX = logoLeft + logoWidth + 5f // Adjust the horizontal position
+        val additionalTextY = bounds.centerY() + heartbeatPaint.textSize / 2 - 20 // Center the additional text vertically
+
+        // Draw the additional text
+        canvas.drawText(s, additionalTextX, additionalTextY, heartbeatPaint)
     }
 
     private fun drawBatteryPercentage(
@@ -328,18 +365,18 @@ class AnalogWatchCanvasRenderer(
         val textPaint = Paint().apply {
             color = Color.WHITE
             textAlign = Paint.Align.LEFT
-            textSize = 20f
+            textSize = 15f
         }
 
         val text = "$batteryPercentage%"
-        val textX = 40f // Adjust the horizontal position
-        val textY = centerY - 10f // Adjust the vertical position
+        val textX = 35f // Adjust the horizontal position
+        val textY = centerY - 15f // Adjust the vertical position
         canvas.drawText(text, textX, textY, textPaint)
 
         // Draw an image on the left side of the text
         val logoDrawable = getLogoDrawable(R.drawable.heartbeat) // Replace this with your method to get the logo drawable
-        val logoWidth = 25
-        val logoHeight = 25
+        val logoWidth = 20
+        val logoHeight = 20
         val logoLeft = 10f // Adjust the horizontal position
         val logoTop = bounds.exactCenterY() - 30f
         logoDrawable.setBounds(
@@ -414,38 +451,30 @@ class AnalogWatchCanvasRenderer(
     private fun displayHeartbeatAndLogo(canvas: Canvas, bounds: Rect, heartBeat: String) {
         val heartbeatPaint = Paint().apply {
             color = Color.WHITE // Adjust the color as needed
-            textAlign = Paint.Align.RIGHT // Align the text to the right
-            textSize = 20f // Adjust the text size as needed
+            textAlign = Paint.Align.LEFT // Align the text to the right
+            textSize = 15f // Adjust the text size as needed
         }
 
-        // Calculate the center of the logo
-        val centerYLogo = bounds.centerY().toFloat()
-
-        // Calculate the center of the text vertically aligned with the logo
-        val centerYHeartbeat = centerYLogo + (heartbeatPaint.textSize / 2)
-
-        val textRight = bounds.right - 5.toFloat() // Align the text to the right
-        canvas.drawText(
-            heartBeat,
-            textRight,
-            centerYHeartbeat,
-            heartbeatPaint
-        )
-
-        // Add some space between the text and the logo
-        val spaceBetweenTextAndLogo = 40
-
-        // Draw a simple logo to the right of the text with added spacing
         val logoDrawable = getLogoDrawable(R.drawable.heartbeat) // Replace this with your method to get the logo drawable
-        val logoWidth = 25
-        val logoHeight = 25
-        val logoLeft = textRight - logoWidth - spaceBetweenTextAndLogo // Adjust the horizontal position
-        val logoTop = centerYLogo - (logoHeight / 2) + 2 // Adjust the vertical position
+        val logoWidth = 20
+        val logoHeight = 20
+
+        val logoLeft = bounds.right.toFloat() - logoWidth - 60f // Adjust the horizontal position to the right
+        val logoTop = bounds.centerY() - logoHeight / 2 - 40 // Center the image vertically
+
         logoDrawable.setBounds(
-            logoLeft.toInt(), logoTop.toInt(),
-            (logoLeft + logoWidth).toInt(), (logoTop + logoHeight).toInt()
+            logoLeft.toInt(),
+            logoTop,
+            (logoLeft + logoWidth).toInt(),
+            (logoTop + logoHeight)
         )
         logoDrawable.draw(canvas)
+
+        val additionalTextX = logoLeft + logoWidth + 5f // Adjust the horizontal position
+        val additionalTextY = bounds.centerY() + heartbeatPaint.textSize / 2 - 42 // Center the additional text vertically
+
+        // Draw the additional text
+        canvas.drawText(heartBeat, additionalTextX, additionalTextY, heartbeatPaint)
     }
 
     /**
