@@ -88,4 +88,5 @@ dependencies {
     implementation libs.wear.watchface.style
     implementation libs.play.services.fitness
     implementation libs.play.services.auth
+    implementation libs.gson
 }
