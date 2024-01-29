@@ -45,6 +45,7 @@ import androidx.wear.watchface.style.UserStyleSetting
 import com.example.android.wearable.alpha.data.watchface.ColorStyleIdAndResourceIds
 import com.example.android.wearable.alpha.data.watchface.WatchFaceColorPalette.Companion.convertToWatchFaceColorPalette
 import com.example.android.wearable.alpha.data.watchface.WatchFaceData
+import com.example.android.wearable.alpha.model.InnerScheduleModel
 import com.example.android.wearable.alpha.model.ScheduleModel
 import com.example.android.wearable.alpha.utils.COLOR_STYLE_SETTING
 import com.example.android.wearable.alpha.utils.DRAW_HOUR_PIPS_STYLE_SETTING
@@ -414,6 +415,12 @@ class AnalogWatchCanvasRenderer(
 
         if (scheduleModel.days.contains(getCurrentDayShortForm())) {
             for (i in scheduleModel.schedule) {
+
+                if (Duration.between(currentTime, i.startTime).nano < 1000) {
+                    Log.d("vibrate", "vibrating")
+                    vibrate(i.vibrateOnStart.toLongArray())
+                }
+
                 if (currentTime.isAfter(i.startTime) && currentTime.isBefore(i.endTime)) {
                     val time = "${
                         getDifferenceOfLocalTime(
@@ -435,23 +442,27 @@ class AnalogWatchCanvasRenderer(
                         ).toFloat())),
                         getDifferenceOfLocalTime(currentTime, i.startTime),
                         getDifferenceOfLocalTime(currentTime, i.endTime),
-                        (getNumberOf15MinIntervalBetweenLocalTime(i.startTime,i.endTime) + 1).toInt()
+                        (getNumberOf15MinIntervalBetweenLocalTime(
+                            i.startTime,
+                            i.endTime
+                        ) + 1).toInt()
                     )
                     displayCurrentScheduleWithTime(canvas, bounds, i.name, time)
 
-                    if (scheduleModel.schedule.indexOf(i) < scheduleModel.schedule.lastIndex) {
-                        val model = scheduleModel.schedule[scheduleModel.schedule.indexOf(i) + 1]
+                    drawCurrentScheduleHabits(canvas, bounds, i.habits)
+                }
 
-                        drawNextScheduleAndCurrentHabits(
-                            canvas,
-                            bounds,
-                            model.name,
-                            "${convertLocalTimeTo24HourFormat(model.startTime)} - ${
-                                convertLocalTimeTo24HourFormat(model.endTime)
-                            }",
-                            i.habits
-                        )
-                    }
+                val nextGreatest = findNextGreatest(currentTime)
+
+                if (nextGreatest != null) {
+                    drawNextSchedule(
+                        canvas,
+                        bounds,
+                        nextGreatest.name,
+                        "${convertLocalTimeTo24HourFormat(nextGreatest.startTime)} - ${
+                            convertLocalTimeTo24HourFormat(nextGreatest.endTime)
+                        }"
+                    )
                 }
             }
         }
@@ -467,12 +478,25 @@ class AnalogWatchCanvasRenderer(
         drawNumberOfSteps(canvas, bounds, "37,565")
     }
 
-    private fun vibrate(pattern: List<Long>) {
-        // Vibrate with the specified pattern
-        vibrator.vibrate(VibrationEffect.createWaveform(pattern.toLongArray(), -1))
+    private fun findNextGreatest(currentTime: LocalTime): InnerScheduleModel? {
+        var nextGreaterValue: InnerScheduleModel? = null
+
+        for (element in scheduleModel.schedule) {
+            if (element.startTime > currentTime) {
+                nextGreaterValue = element
+                break
+            }
+        }
+
+        return nextGreaterValue
     }
 
-    private fun getNumberOf15MinIntervalBetweenLocalTime(time1 : LocalTime, time2 : LocalTime) : Long{
+    private fun vibrate(pattern: LongArray) {
+        // Vibrate with the specified pattern
+        vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
+    }
+
+    private fun getNumberOf15MinIntervalBetweenLocalTime(time1: LocalTime, time2: LocalTime): Long {
         return Duration.between(time1, time2).toMinutes() / 15
     }
 
@@ -606,23 +630,13 @@ class AnalogWatchCanvasRenderer(
         logoDrawable.draw(canvas)
     }
 
-    private fun drawNextScheduleAndCurrentHabits(
+    private fun drawCurrentScheduleHabits(
         canvas: Canvas,
-        bounds: Rect,
-        nextScheduleName: String,
-        nextScheduleTime: String,
-        habits: ArrayList<String>
+        bounds: Rect, habits: ArrayList<String>
     ) {
-        // Draw texts at the bottom
         val textPaintHabits = Paint().apply {
             color = Color.WHITE
             textSize = 15f // Adjust font size as needed
-            textAlign = Paint.Align.CENTER
-        }
-
-        val textPaint = Paint().apply {
-            color = Color.WHITE
-            textSize = 12f // Adjust font size as needed
             textAlign = Paint.Align.CENTER
         }
 
@@ -678,6 +692,24 @@ class AnalogWatchCanvasRenderer(
                 textPaintHabits
             )
         }
+    }
+
+    private fun drawNextSchedule(
+        canvas: Canvas,
+        bounds: Rect,
+        nextScheduleName: String,
+        nextScheduleTime: String
+    ) {
+        // Draw texts at the bottom
+
+
+        val textPaint = Paint().apply {
+            color = Color.WHITE
+            textSize = 12f // Adjust font size as needed
+            textAlign = Paint.Align.CENTER
+        }
+
+
 
         canvas.drawText(
             nextScheduleName,
@@ -737,7 +769,7 @@ class AnalogWatchCanvasRenderer(
         progress: Float,
         timePassed: String,
         timeLeft: String,
-        interval : Int
+        interval: Int
     ) {
         val paint = Paint().apply {
             color = Color.GREEN // Customize the arc color
