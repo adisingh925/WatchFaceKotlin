@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.android.wearable.alpha.data.watchface
+package com.watchface.android.wearable.alpha.data.watchface
 
 data class ArmDimensions(
     val lengthFraction: Float,

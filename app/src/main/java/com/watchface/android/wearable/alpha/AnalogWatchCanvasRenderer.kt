@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.android.wearable.alpha
+package com.watchface.android.wearable.alpha
 
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -25,6 +26,8 @@ import android.graphics.Path
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.os.BatteryManager
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -42,15 +45,16 @@ import androidx.wear.watchface.complications.rendering.ComplicationDrawable
 import androidx.wear.watchface.style.CurrentUserStyleRepository
 import androidx.wear.watchface.style.UserStyle
 import androidx.wear.watchface.style.UserStyleSetting
-import com.example.android.wearable.alpha.data.watchface.ColorStyleIdAndResourceIds
-import com.example.android.wearable.alpha.data.watchface.WatchFaceColorPalette.Companion.convertToWatchFaceColorPalette
-import com.example.android.wearable.alpha.data.watchface.WatchFaceData
-import com.example.android.wearable.alpha.model.InnerScheduleModel
-import com.example.android.wearable.alpha.model.ScheduleModel
-import com.example.android.wearable.alpha.utils.COLOR_STYLE_SETTING
-import com.example.android.wearable.alpha.utils.DRAW_HOUR_PIPS_STYLE_SETTING
-import com.example.android.wearable.alpha.utils.TimeDeserializer
-import com.example.android.wearable.alpha.utils.WATCH_HAND_LENGTH_STYLE_SETTING
+import com.watchface.android.wearable.alpha.data.watchface.ColorStyleIdAndResourceIds
+import com.watchface.android.wearable.alpha.data.watchface.WatchFaceColorPalette.Companion.convertToWatchFaceColorPalette
+import com.watchface.android.wearable.alpha.data.watchface.WatchFaceData
+import com.watchface.android.wearable.alpha.model.InnerScheduleModel
+import com.watchface.android.wearable.alpha.model.ScheduleModel
+import com.watchface.android.wearable.alpha.sharedpreferences.SharedPreferences
+import com.watchface.android.wearable.alpha.utils.COLOR_STYLE_SETTING
+import com.watchface.android.wearable.alpha.utils.DRAW_HOUR_PIPS_STYLE_SETTING
+import com.watchface.android.wearable.alpha.utils.TimeDeserializer
+import com.watchface.android.wearable.alpha.utils.WATCH_HAND_LENGTH_STYLE_SETTING
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.fitness.Fitness
@@ -154,6 +158,9 @@ class AnalogWatchCanvasRenderer(
     private var stepCount: Int = 0
     private val MAX_HEART_RATE = 220
 
+    private lateinit var sensorManager: SensorManager
+    private var heartRateSensor: Sensor? = null
+
     // Changed when setting changes cause a change in the minute hand arm (triggered by user in
     // updateUserStyle() via userStyleRepository.addUserStyleListener()).
     private var armLengthChangedRecalculateClockHands: Boolean = false
@@ -211,6 +218,8 @@ class AnalogWatchCanvasRenderer(
         }
 
         readAndParseJsonFile()
+//        subscribeToHeartRate()
+//        subscribeToStepCount()
     }
 
     private fun readJsonFile(resourceId: Int): String {
@@ -366,13 +375,13 @@ class AnalogWatchCanvasRenderer(
         /**
          * This will clear the canvas with the background color
          */
-        val backgroundColor = if (renderParameters.drawMode == DrawMode.AMBIENT) {
-            watchFaceColors.ambientBackgroundColor
-        } else {
-            watchFaceColors.activeBackgroundColor
-        }
-
-        canvas.drawColor(backgroundColor)
+//        val backgroundColor = if (renderParameters.drawMode == DrawMode.AMBIENT) {
+//            watchFaceColors.ambientBackgroundColor
+//        } else {
+//            watchFaceColors.activeBackgroundColor
+//        }
+//
+//        canvas.drawColor(backgroundColor)
 //
 //        // CanvasComplicationDrawable already obeys rendererParameters.
 //        drawComplications(canvas, zonedDateTime)
@@ -396,6 +405,16 @@ class AnalogWatchCanvasRenderer(
 //            )
 //        }
 
+        val backgroundImage = BitmapFactory.decodeResource(context.resources, R.drawable.image_wave_purple)
+
+        // Draw the background image on the canvas
+        canvas.drawBitmap(
+            backgroundImage,
+            null,
+            Rect(0, 0, canvas.width, canvas.height), // Full canvas size
+            null
+        )
+
         Log.d(TAG, "render()")
 
         val currentTime = LocalTime.now()
@@ -413,83 +432,69 @@ class AnalogWatchCanvasRenderer(
         /**
          * display the heartbeat and the logo in the canvas
          */
-        displayHeartbeatAndLogo(canvas, bounds, "999")
+        displayHeartbeatAndLogo(canvas, bounds, "120")
 
-        if (scheduleModel.days.contains(getCurrentDayShortForm())) {
-            for (i in scheduleModel.schedule) {
-                if (currentTime.isAfter(i.startTime) && currentTime.isBefore(i.endTime)) {
-                    if(Duration.between(currentTime,i.endTime).seconds.toInt() == i.vibrateBeforeEndSecs){
-                        if(nameMap[i.name+"e"] == null) {
-                            Log.d("Vibrate", "end Vibrate")
-                            nameMap[i.name+"e"] = 0
-                            for(j in nameMap) {
-                                if(j.key != i.name+"e") {
-                                    nameMap[j.key] = null
-                                }
-
-                                if(j.key != i.name+"s") {
-                                    nameMap[j.key] = null
+        if(SharedPreferences.read("schedule", 0) == 1) {
+            if (scheduleModel.days.contains(getCurrentDayShortForm())) {
+                for (i in scheduleModel.schedule) {
+                    if (currentTime.isAfter(i.startTime) && currentTime.isBefore(i.endTime)) {
+                        if(SharedPreferences.read("vibration", 0) == 1) {
+                            if(Duration.between(currentTime,i.endTime).seconds.toInt() == i.vibrateBeforeEndSecs){
+                                if(nameMap[i.name] == 0) {
+                                    nameMap[i.name] = null
+                                    vibrate(i.vibrateBeforeEnd.toLongArray())
                                 }
                             }
-                            vibrate(i.vibrateBeforeEnd.toLongArray())
-                        }
-                    }
 
-                    if(nameMap[i.name+"s"] == null) {
-                        Log.d("Vibrate", "start Vibrate")
-                        nameMap[i.name+"s"] = 0
-                        for(j in nameMap) {
-                            if(j.key != i.name+"s") {
-                                nameMap[j.key] = null
-                            }
-
-                            if(j.key != i.name+"e") {
-                                nameMap[j.key] = null
+                            if(Duration.between(i.startTime, currentTime).seconds.toInt() <= 1){
+                                if(nameMap[i.name] == null) {
+                                    nameMap[i.name] = 0
+                                    vibrate(i.vibrateOnStart.toLongArray())
+                                }
                             }
                         }
-                        vibrate(i.vibrateOnStart.toLongArray())
-                    }
 
-                    val time = "${
-                        getDifferenceOfLocalTime(
-                            i.startTime,
-                            i.endTime
-                        )
-                    } | ${convertLocalTimeTo24HourFormat(i.startTime)} - ${
-                        convertLocalTimeTo24HourFormat(i.endTime)
-                    }"
-                    drawProgressArc(
-                        canvas,
-                        bounds,
-                        (getLocalTimeDifferenceInMinutes(
-                            i.startTime,
-                            currentTime
-                        ) * (60F / getLocalTimeDifferenceInMinutes(
-                            i.startTime,
-                            i.endTime
-                        ).toFloat())),
-                        getDifferenceOfLocalTime(currentTime, i.startTime),
-                        getDifferenceOfLocalTime(currentTime, i.endTime),
-                        (getNumberOf15MinIntervalBetweenLocalTime(
-                            i.startTime,
-                            i.endTime
-                        ) + 1).toInt()
-                    )
-                    displayCurrentScheduleWithTime(canvas, bounds, i.name, time)
-
-                    drawCurrentScheduleHabits(canvas, i.habits)
-                }
-
-                val nextGreatest = findNextGreatest(currentTime)
-
-                if (nextGreatest != null) {
-                    drawNextSchedule(
-                        canvas,
-                        nextGreatest.name,
-                        "${convertLocalTimeTo24HourFormat(nextGreatest.startTime)} - ${
-                            convertLocalTimeTo24HourFormat(nextGreatest.endTime)
+                        val time = "${
+                            getDifferenceOfLocalTime(
+                                i.startTime,
+                                i.endTime
+                            )
+                        } | ${convertLocalTimeTo24HourFormat(i.startTime)} - ${
+                            convertLocalTimeTo24HourFormat(i.endTime)
                         }"
-                    )
+                        drawProgressArc(
+                            canvas,
+                            bounds,
+                            (getLocalTimeDifferenceInMinutes(
+                                i.startTime,
+                                currentTime
+                            ) * (60F / getLocalTimeDifferenceInMinutes(
+                                i.startTime,
+                                i.endTime
+                            ).toFloat())),
+                            getDifferenceOfLocalTime(currentTime, i.startTime),
+                            getDifferenceOfLocalTime(currentTime, i.endTime),
+                            (getNumberOf15MinIntervalBetweenLocalTime(
+                                i.startTime,
+                                i.endTime
+                            ) + 1).toInt()
+                        )
+                        displayCurrentScheduleWithTime(canvas, bounds, i.name, time)
+
+                        drawCurrentScheduleHabits(canvas, i.habits)
+                    }
+
+                    val nextGreatest = findNextGreatest(currentTime)
+
+                    if (nextGreatest != null) {
+                        drawNextSchedule(
+                            canvas,
+                            nextGreatest.name,
+                            "${convertLocalTimeTo24HourFormat(nextGreatest.startTime)} - ${
+                                convertLocalTimeTo24HourFormat(nextGreatest.endTime)
+                            }"
+                        )
+                    }
                 }
             }
         }
@@ -497,7 +502,7 @@ class AnalogWatchCanvasRenderer(
         /**
          * display the battery percentage in the canvas
          */
-        drawBatteryPercentage(canvas, bounds, getWatchBatteryLevel(context).toString())
+        drawBatteryPercentage(canvas, bounds, getWatchBatteryLevel(context))
 
         /**
          * display number of steps in the canvas
@@ -580,17 +585,20 @@ class AnalogWatchCanvasRenderer(
         canvas.drawText(scheduleTime, bounds.exactCenterX(), text2Y, heartBeatPaint)
     }
 
-    private fun getWatchBatteryLevel(context: Context): Int {
+    private fun getWatchBatteryLevel(context: Context): Pair<Int, Boolean> {
         val batteryIntent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         val level = batteryIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
         val scale = batteryIntent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+        val status = batteryIntent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+
+        val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
 
         return if (level != -1 && scale != -1) {
             // Calculate battery percentage
-            (level.toFloat() / scale.toFloat() * 100).toInt()
+            Pair((level.toFloat() / scale.toFloat() * 100).toInt(), isCharging)
         } else {
             // Unable to retrieve battery level
-            -1
+            Pair(-1, isCharging)
         }
     }
 
@@ -601,7 +609,7 @@ class AnalogWatchCanvasRenderer(
         val logoHeight = 20
 
         val logoLeft = bounds.right.toFloat() - logoWidth - 60f
-        val logoTop = bounds.centerY() - logoHeight / 2 - 17
+        val logoTop = bounds.centerY() - logoHeight / 2 - 10
 
         logoDrawable.setBounds(
             logoLeft.toInt(),
@@ -613,7 +621,7 @@ class AnalogWatchCanvasRenderer(
         logoDrawable.draw(canvas)
 
         val additionalTextX = logoLeft + logoWidth // Adjust the horizontal position
-        val additionalTextY = bounds.centerY() + stepsPaint.textSize / 2 - 20 // Center the additional text vertically
+        val additionalTextY = bounds.centerY() + stepsPaint.textSize / 2 - 13 // Center the additional text vertically
 
         // Draw the additional text
         canvas.drawText(s, additionalTextX, additionalTextY, stepsPaint)
@@ -622,16 +630,58 @@ class AnalogWatchCanvasRenderer(
     private fun drawBatteryPercentage(
         canvas: Canvas,
         bounds: Rect,
-        batteryPercentage: String
+        batteryPercentage: Pair<Int, Boolean>
     ) {
         val batteryPaint = getTextPaint(15f, Paint.Align.LEFT, Color.WHITE)
-        val text = "$batteryPercentage%"
+        val text = "${batteryPercentage.first}%"
         val textX = 30f // Adjust the horizontal position
         val textY = centerY - 14f // Adjust the vertical position
         canvas.drawText(text, textX, textY, batteryPaint)
 
         // Draw an image on the left side of the text
-        val logoDrawable = getLogoDrawable(R.drawable.battery) // Replace this with your method to get the logo drawable
+        var batteryDrawable = 0
+
+        if(batteryPercentage.second){
+            batteryDrawable = R.drawable.battery_charging
+        }else{
+            when {
+                batteryPercentage.first <= 5 -> {
+                    batteryDrawable = R.drawable.battery_alert
+                }
+                batteryPercentage.first <= 10 -> {
+                    batteryDrawable = R.drawable.battery_0
+                }
+                batteryPercentage.first <= 20 -> {
+                    batteryDrawable = R.drawable.battery_1
+                }
+                batteryPercentage.first <= 30 -> {
+                    batteryDrawable = R.drawable.battery_2
+                }
+                batteryPercentage.first < 50 -> {
+                    batteryDrawable = R.drawable.battery_3
+                }
+                batteryPercentage.first == 50 -> {
+                    batteryDrawable = R.drawable.battery_4
+                }
+                batteryPercentage.first <= 60 -> {
+                    batteryDrawable = R.drawable.battery_5
+                }
+                batteryPercentage.first <= 70 -> {
+                    batteryDrawable = R.drawable.battery_6
+                }
+                batteryPercentage.first <= 80 -> {
+                    batteryDrawable = R.drawable.battery_6
+                }
+                batteryPercentage.first <= 90 -> {
+                    batteryDrawable = R.drawable.battery_full
+                }
+                batteryPercentage.first <= 100 -> {
+                    batteryDrawable = R.drawable.battery_full
+                }
+            }
+        }
+
+        val logoDrawable = getLogoDrawable(batteryDrawable) // Replace this with your method to get the logo drawable
         val logoWidth = 20
         val logoHeight = 20
         val logoLeft = 10f // Adjust the horizontal position
@@ -643,6 +693,18 @@ class AnalogWatchCanvasRenderer(
             (logoLeft + logoWidth).toInt(),
             (logoTop + logoHeight).toInt()
         )
+
+        if(batteryPercentage.second) {
+            logoDrawable.setTint(Color.GREEN)
+        }else{
+            if(batteryPercentage.first <= 15){
+                logoDrawable.setTint(Color.RED)
+            }else if(batteryPercentage.first <= 50) {
+                logoDrawable.setTint(Color.YELLOW)
+            }else if(batteryPercentage.first <= 100) {
+                logoDrawable.setTint(Color.GREEN)
+            }
+        }
 
         logoDrawable.draw(canvas)
     }

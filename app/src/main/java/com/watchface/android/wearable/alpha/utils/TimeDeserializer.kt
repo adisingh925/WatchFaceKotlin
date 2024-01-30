@@ -1,4 +1,4 @@
-package com.example.android.wearable.alpha.utils
+package com.watchface.android.wearable.alpha.utils
 
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer

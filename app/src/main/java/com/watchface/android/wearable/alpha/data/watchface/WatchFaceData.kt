@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.android.wearable.alpha.data.watchface
+package com.watchface.android.wearable.alpha.data.watchface
 
 // Defaults for the watch face. All private values aren't editable by the user, so they don't need
 // to be exposed as settings defaults.
@@ -76,7 +76,6 @@ data class WatchFaceData(
     val numberRadiusFraction: Float = NUMBER_RADIUS_FRACTION,
     val outerCircleStokeWidthFraction: Float = OUTER_CIRCLE_STROKE_WIDTH_FRACTION,
     val numberStyleOuterCircleRadiusFraction: Float = NUMBER_STYLE_OUTER_CIRCLE_RADIUS_FRACTION,
-    val gapBetweenOuterCircleAndBorderFraction: Float =
-        GAP_BETWEEN_OUTER_CIRCLE_AND_BORDER_FRACTION,
+    val gapBetweenOuterCircleAndBorderFraction: Float = GAP_BETWEEN_OUTER_CIRCLE_AND_BORDER_FRACTION,
     val gapBetweenHandAndCenterFraction: Float = GAP_BETWEEN_HAND_AND_CENTER_FRACTION
 )

@@ -44,11 +44,11 @@
     },
     {
       "name": "Meetings",
-      "startTime": "22:20",
-      "endTime": "23:50",
+      "startTime": "15:30",
+      "endTime": "16:00",
       "habits": [
         "Attend team meeting",
-        "Review project status"
+        "Review project"
       ],
       "vibrateOnStart": [
         500
@@ -56,12 +56,12 @@
       "vibrateBeforeEnd": [
         1000
       ],
-      "vibrateBeforeEndSecs": 300
+      "vibrateBeforeEndSecs": 60
     },
     {
       "name": "Sleep",
-      "startTime": "03:13",
-      "endTime": "03:20",
+      "startTime": "18:10",
+      "endTime": "19:25",
       "habits": [
         "Attend team meeting",
         "Review project status","Have Fun!"
@@ -72,7 +72,7 @@
       "vibrateBeforeEnd": [
         1000
       ],
-      "vibrateBeforeEndSecs": 300
+      "vibrateBeforeEndSecs": 100
     }
   ]
 }

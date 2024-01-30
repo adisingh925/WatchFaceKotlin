@@ -1,7 +1,6 @@
-package com.example.android.wearable.alpha.model
+package com.watchface.android.wearable.alpha.model
 
 import java.time.LocalTime
-import java.util.Date
 
 data class InnerScheduleModel (
     val name : String,

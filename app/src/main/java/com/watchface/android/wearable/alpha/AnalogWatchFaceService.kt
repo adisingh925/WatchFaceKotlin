@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.android.wearable.alpha
+package com.watchface.android.wearable.alpha
 
 import android.util.Log
 import android.view.SurfaceHolder
@@ -25,8 +25,9 @@ import androidx.wear.watchface.WatchFaceType
 import androidx.wear.watchface.WatchState
 import androidx.wear.watchface.style.CurrentUserStyleRepository
 import androidx.wear.watchface.style.UserStyleSchema
-import com.example.android.wearable.alpha.utils.createComplicationSlotManager
-import com.example.android.wearable.alpha.utils.createUserStyleSchema
+import com.watchface.android.wearable.alpha.sharedpreferences.SharedPreferences
+import com.watchface.android.wearable.alpha.utils.createComplicationSlotManager
+import com.watchface.android.wearable.alpha.utils.createUserStyleSchema
 
 /**
  * Handles much of the boilerplate needed to implement a watch face (minus rendering code; see
@@ -55,6 +56,7 @@ class AnalogWatchFaceService : WatchFaceService() {
         currentUserStyleRepository: CurrentUserStyleRepository
     ): WatchFace {
         Log.d(TAG, "createWatchFace()")
+        SharedPreferences.init(applicationContext)
 
         // Creates class that renders the watch face.
         val renderer = AnalogWatchCanvasRenderer(
