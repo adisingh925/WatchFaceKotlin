@@ -44,8 +44,8 @@
     },
     {
       "name": "Meetings",
-      "startTime": "02:31",
-      "endTime": "02:50",
+      "startTime": "22:20",
+      "endTime": "23:50",
       "habits": [
         "Attend team meeting",
         "Review project status"
@@ -60,8 +60,8 @@
     },
     {
       "name": "Sleep",
-      "startTime": "04:00",
-      "endTime": "05:20",
+      "startTime": "03:13",
+      "endTime": "03:20",
       "habits": [
         "Attend team meeting",
         "Review project status","Have Fun!"

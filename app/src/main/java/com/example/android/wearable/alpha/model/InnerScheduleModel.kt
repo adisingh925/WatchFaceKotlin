@@ -9,6 +9,6 @@ data class InnerScheduleModel (
     val endTime : LocalTime,
     val habits : ArrayList<String>,
     val vibrateOnStart : ArrayList<Long>,
-    val vibrateBeforeEnd : ArrayList<Int>,
+    val vibrateBeforeEnd : ArrayList<Long>,
     val vibrateBeforeEndSecs : Int,
 )

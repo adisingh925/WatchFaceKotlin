@@ -106,6 +106,8 @@ class AnalogWatchCanvasRenderer(
 
     private lateinit var scheduleModel: ScheduleModel
 
+    private val nameMap = HashMap<String, Int?>()
+
     private val vibrator: Vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -415,13 +417,39 @@ class AnalogWatchCanvasRenderer(
 
         if (scheduleModel.days.contains(getCurrentDayShortForm())) {
             for (i in scheduleModel.schedule) {
-
-                if (Duration.between(currentTime, i.startTime).nano < 1000) {
-                    Log.d("vibrate", "vibrating")
-                    vibrate(i.vibrateOnStart.toLongArray())
-                }
-
                 if (currentTime.isAfter(i.startTime) && currentTime.isBefore(i.endTime)) {
+                    if(Duration.between(currentTime,i.endTime).seconds.toInt() == i.vibrateBeforeEndSecs){
+                        if(nameMap[i.name+"e"] == null) {
+                            Log.d("Vibrate", "end Vibrate")
+                            nameMap[i.name+"e"] = 0
+                            for(j in nameMap) {
+                                if(j.key != i.name+"e") {
+                                    nameMap[j.key] = null
+                                }
+
+                                if(j.key != i.name+"s") {
+                                    nameMap[j.key] = null
+                                }
+                            }
+                            vibrate(i.vibrateBeforeEnd.toLongArray())
+                        }
+                    }
+
+                    if(nameMap[i.name+"s"] == null) {
+                        Log.d("Vibrate", "start Vibrate")
+                        nameMap[i.name+"s"] = 0
+                        for(j in nameMap) {
+                            if(j.key != i.name+"s") {
+                                nameMap[j.key] = null
+                            }
+
+                            if(j.key != i.name+"e") {
+                                nameMap[j.key] = null
+                            }
+                        }
+                        vibrate(i.vibrateOnStart.toLongArray())
+                    }
+
                     val time = "${
                         getDifferenceOfLocalTime(
                             i.startTime,
@@ -449,7 +477,7 @@ class AnalogWatchCanvasRenderer(
                     )
                     displayCurrentScheduleWithTime(canvas, bounds, i.name, time)
 
-                    drawCurrentScheduleHabits(canvas, bounds, i.habits)
+                    drawCurrentScheduleHabits(canvas, i.habits)
                 }
 
                 val nextGreatest = findNextGreatest(currentTime)
@@ -457,7 +485,6 @@ class AnalogWatchCanvasRenderer(
                 if (nextGreatest != null) {
                     drawNextSchedule(
                         canvas,
-                        bounds,
                         nextGreatest.name,
                         "${convertLocalTimeTo24HourFormat(nextGreatest.startTime)} - ${
                             convertLocalTimeTo24HourFormat(nextGreatest.endTime)
@@ -492,7 +519,6 @@ class AnalogWatchCanvasRenderer(
     }
 
     private fun vibrate(pattern: LongArray) {
-        // Vibrate with the specified pattern
         vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
     }
 
@@ -511,14 +537,14 @@ class AnalogWatchCanvasRenderer(
         val minutes = duration.toMinutes() % 60
         val seconds = duration.seconds
 
-        if (hours != 0L && minutes != 0L) {
-            return "${hours}h ${minutes}m"
+        return if (hours != 0L && minutes != 0L) {
+            "${hours}h ${minutes}m"
         } else if (hours == 0L && minutes != 0L) {
-            return "${minutes}m"
+            "${minutes}m"
         } else if (hours != 0L) {
-            return "${hours}h"
+            "${hours}h"
         } else {
-            return "${seconds}s"
+            "${seconds}s"
         }
     }
 
@@ -532,28 +558,30 @@ class AnalogWatchCanvasRenderer(
         return LocalDate.now().format(formatter)
     }
 
+    private fun getTextPaint(fontSize : Float, alignment: Paint.Align, textColor: Int) : Paint{
+        return Paint().apply {
+            color = textColor
+            textAlign = alignment
+            textSize = fontSize
+        }
+    }
+
     private fun displayCurrentScheduleWithTime(
         canvas: Canvas,
         bounds: Rect,
         scheduleName: String,
         scheduleTime: String
     ) {
-        val heartbeatPaint = Paint().apply {
-            color = Color.WHITE // Adjust the color as needed
-            textAlign = Paint.Align.CENTER // Align the text to the right
-            textSize = 12f // Adjust the text size as needed
-        }
+        val heartBeatPaint = getTextPaint(12f, Paint.Align.CENTER, Color.WHITE)
+        val text1Y = bounds.top + 40f
+        val text2Y = bounds.top + 55f
 
-        val text1Y = bounds.top + 40f // Adjust the vertical position of the first line
-        val text2Y = bounds.top + 55f // Adjust the vertical position of the second line
-
-        canvas.drawText(scheduleName, bounds.exactCenterX(), text1Y, heartbeatPaint)
-        canvas.drawText(scheduleTime, bounds.exactCenterX(), text2Y, heartbeatPaint)
+        canvas.drawText(scheduleName, bounds.exactCenterX(), text1Y, heartBeatPaint)
+        canvas.drawText(scheduleTime, bounds.exactCenterX(), text2Y, heartBeatPaint)
     }
 
     private fun getWatchBatteryLevel(context: Context): Int {
-        val batteryIntent =
-            context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        val batteryIntent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         val level = batteryIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
         val scale = batteryIntent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
 
@@ -567,20 +595,13 @@ class AnalogWatchCanvasRenderer(
     }
 
     private fun drawNumberOfSteps(canvas: Canvas, bounds: Rect, s: String) {
-        val heartbeatPaint = Paint().apply {
-            color = Color.WHITE // Adjust the color as needed
-            textAlign = Paint.Align.LEFT // Align the text to the right
-            textSize = 15f // Adjust the text size as needed
-        }
-
-        val logoDrawable =
-            getLogoDrawable(R.drawable.walk) // Replace this with your method to get the logo drawable
+        val stepsPaint = getTextPaint(15f, Paint.Align.LEFT, Color.WHITE)
+        val logoDrawable = getLogoDrawable(R.drawable.walk)
         val logoWidth = 20
         val logoHeight = 20
 
-        val logoLeft =
-            bounds.right.toFloat() - logoWidth - 60f // Adjust the horizontal position to the right
-        val logoTop = bounds.centerY() - logoHeight / 2 - 17 // Center the image vertically
+        val logoLeft = bounds.right.toFloat() - logoWidth - 60f
+        val logoTop = bounds.centerY() - logoHeight / 2 - 17
 
         logoDrawable.setBounds(
             logoLeft.toInt(),
@@ -588,14 +609,14 @@ class AnalogWatchCanvasRenderer(
             (logoLeft + logoWidth).toInt(),
             (logoTop + logoHeight)
         )
+
         logoDrawable.draw(canvas)
 
         val additionalTextX = logoLeft + logoWidth // Adjust the horizontal position
-        val additionalTextY =
-            bounds.centerY() + heartbeatPaint.textSize / 2 - 20 // Center the additional text vertically
+        val additionalTextY = bounds.centerY() + stepsPaint.textSize / 2 - 20 // Center the additional text vertically
 
         // Draw the additional text
-        canvas.drawText(s, additionalTextX, additionalTextY, heartbeatPaint)
+        canvas.drawText(s, additionalTextX, additionalTextY, stepsPaint)
     }
 
     private fun drawBatteryPercentage(
@@ -603,125 +624,112 @@ class AnalogWatchCanvasRenderer(
         bounds: Rect,
         batteryPercentage: String
     ) {
-        val textPaint = Paint().apply {
-            color = Color.WHITE
-            textAlign = Paint.Align.LEFT
-            textSize = 15f
-        }
-
+        val batteryPaint = getTextPaint(15f, Paint.Align.LEFT, Color.WHITE)
         val text = "$batteryPercentage%"
         val textX = 30f // Adjust the horizontal position
         val textY = centerY - 14f // Adjust the vertical position
-        canvas.drawText(text, textX, textY, textPaint)
+        canvas.drawText(text, textX, textY, batteryPaint)
 
         // Draw an image on the left side of the text
-        val logoDrawable =
-            getLogoDrawable(R.drawable.battery) // Replace this with your method to get the logo drawable
+        val logoDrawable = getLogoDrawable(R.drawable.battery) // Replace this with your method to get the logo drawable
         val logoWidth = 20
         val logoHeight = 20
         val logoLeft = 10f // Adjust the horizontal position
         val logoTop = bounds.exactCenterY() - 30f
+
         logoDrawable.setBounds(
             logoLeft.toInt(),
             logoTop.toInt(),
             (logoLeft + logoWidth).toInt(),
             (logoTop + logoHeight).toInt()
         )
+
         logoDrawable.draw(canvas)
     }
 
     private fun drawCurrentScheduleHabits(
         canvas: Canvas,
-        bounds: Rect, habits: ArrayList<String>
+        habits: ArrayList<String>
     ) {
-        val textPaintHabits = Paint().apply {
-            color = Color.WHITE
-            textSize = 15f // Adjust font size as needed
-            textAlign = Paint.Align.CENTER
-        }
-
+        val currentSchedulePaint = getTextPaint(15f, Paint.Align.CENTER, Color.WHITE)
         val textOffset = 20f // Adjust vertical spacing between texts
 
-        if (habits.size == 1) {
-            canvas.drawText(
-                habits[0],
-                (canvas.width / 2).toFloat(),
-                canvas.height - textPaint.textSize - textOffset * 4,
-                textPaintHabits
-            )
-        } else if (habits.size == 2) {
-            canvas.drawText(
-                habits[0],
-                (canvas.width / 2).toFloat(),
-                canvas.height - textPaint.textSize - textOffset * 4,
-                textPaintHabits
-            )
+        when (habits.size) {
+            1 -> {
+                canvas.drawText(
+                    habits[0],
+                    (canvas.width / 2).toFloat(),
+                    canvas.height - textPaint.textSize - textOffset * 4,
+                    currentSchedulePaint
+                )
+            }
+            2 -> {
+                canvas.drawText(
+                    habits[0],
+                    (canvas.width / 2).toFloat(),
+                    canvas.height - textPaint.textSize - textOffset * 4,
+                    currentSchedulePaint
+                )
 
-            canvas.drawText(
-                habits[1],
-                (canvas.width / 2).toFloat(),
-                canvas.height - textPaint.textSize - textOffset * 3,
-                textPaintHabits
-            )
-        } else if (habits.size == 3) {
-            canvas.drawText(
-                "${habits[0]} | ${habits[1]}",
-                (canvas.width / 2).toFloat(),
-                canvas.height - textPaint.textSize - textOffset * 4,
-                textPaintHabits
-            )
+                canvas.drawText(
+                    habits[1],
+                    (canvas.width / 2).toFloat(),
+                    canvas.height - textPaint.textSize - textOffset * 3,
+                    currentSchedulePaint
+                )
+            }
+            3 -> {
+                canvas.drawText(
+                    "${habits[0]} | ${habits[1]}",
+                    (canvas.width / 2).toFloat(),
+                    canvas.height - textPaint.textSize - textOffset * 4,
+                    currentSchedulePaint
+                )
 
-            canvas.drawText(
-                habits[2],
-                (canvas.width / 2).toFloat(),
-                canvas.height - textPaint.textSize - textOffset * 3,
-                textPaintHabits
-            )
-        } else if (habits.size == 4) {
-            canvas.drawText(
-                "${habits[0]} | ${habits[1]}",
-                (canvas.width / 2).toFloat(),
-                canvas.height - textPaint.textSize - textOffset * 4,
-                textPaintHabits
-            )
+                canvas.drawText(
+                    habits[2],
+                    (canvas.width / 2).toFloat(),
+                    canvas.height - textPaint.textSize - textOffset * 3,
+                    currentSchedulePaint
+                )
+            }
+            4 -> {
+                canvas.drawText(
+                    "${habits[0]} | ${habits[1]}",
+                    (canvas.width / 2).toFloat(),
+                    canvas.height - textPaint.textSize - textOffset * 4,
+                    currentSchedulePaint
+                )
 
-            canvas.drawText(
-                "${habits[2]} | ${habits[3]}",
-                (canvas.width / 2).toFloat(),
-                canvas.height - textPaint.textSize - textOffset * 3,
-                textPaintHabits
-            )
+                canvas.drawText(
+                    "${habits[2]} | ${habits[3]}",
+                    (canvas.width / 2).toFloat(),
+                    canvas.height - textPaint.textSize - textOffset * 3,
+                    currentSchedulePaint
+                )
+            }
         }
     }
 
     private fun drawNextSchedule(
         canvas: Canvas,
-        bounds: Rect,
         nextScheduleName: String,
         nextScheduleTime: String
     ) {
-        // Draw texts at the bottom
-
-
-        val textPaint = Paint().apply {
-            color = Color.WHITE
-            textSize = 12f // Adjust font size as needed
-            textAlign = Paint.Align.CENTER
-        }
-
-
+        val nextSchedulePaint = getTextPaint(12f, Paint.Align.CENTER, Color.WHITE)
 
         canvas.drawText(
             nextScheduleName,
             (canvas.width / 2).toFloat(),
-            canvas.height - textPaint.textSize - 15,
-            textPaint
+            canvas.height - nextSchedulePaint.textSize - 15,
+            nextSchedulePaint
         )
+
         canvas.drawText(
             nextScheduleTime,
             (canvas.width / 2).toFloat(),
-            canvas.height - textPaint.textSize,
-            textPaint
+            canvas.height - nextSchedulePaint.textSize,
+            nextSchedulePaint
         )
     }
 
@@ -729,19 +737,12 @@ class AnalogWatchCanvasRenderer(
      * This function will display the heartbeat and the logo in the canvas at the left
      */
     private fun displayHeartbeatAndLogo(canvas: Canvas, bounds: Rect, heartBeat: String) {
-        val heartbeatPaint = Paint().apply {
-            color = Color.WHITE // Adjust the color as needed
-            textAlign = Paint.Align.LEFT // Align the text to the right
-            textSize = 15f // Adjust the text size as needed
-        }
-
-        val logoDrawable =
-            getLogoDrawable(R.drawable.heartbeat) // Replace this with your method to get the logo drawable
+        val heartBeatPaint = getTextPaint(15f, Paint.Align.LEFT, Color.WHITE)
+        val logoDrawable = getLogoDrawable(R.drawable.heartbeat) // Replace this with your method to get the logo drawable
         val logoWidth = 20
         val logoHeight = 20
 
-        val logoLeft =
-            bounds.right.toFloat() - logoWidth - 50f // Adjust the horizontal position to the right
+        val logoLeft = bounds.right.toFloat() - logoWidth - 50f // Adjust the horizontal position to the right
         val logoTop = bounds.centerY() - logoHeight / 2 - 40 // Center the image vertically
 
         logoDrawable.setBounds(
@@ -750,14 +751,14 @@ class AnalogWatchCanvasRenderer(
             (logoLeft + logoWidth).toInt(),
             (logoTop + logoHeight)
         )
+
         logoDrawable.draw(canvas)
 
         val additionalTextX = logoLeft + logoWidth + 5f // Adjust the horizontal position
-        val additionalTextY =
-            bounds.centerY() + heartbeatPaint.textSize / 2 - 42 // Center the additional text vertically
+        val additionalTextY = bounds.centerY() + heartBeatPaint.textSize / 2 - 42 // Center the additional text vertically
 
         // Draw the additional text
-        canvas.drawText(heartBeat, additionalTextX, additionalTextY, heartbeatPaint)
+        canvas.drawText(heartBeat, additionalTextX, additionalTextY, heartBeatPaint)
     }
 
     /**
@@ -810,29 +811,20 @@ class AnalogWatchCanvasRenderer(
 
         // Draw thin radial lines inside the arc
         for (i in 0 until interval) {
-            val angle =
-                -120f + (i.toFloat() / (interval - 1)) * 60f // Distribute lines evenly inside the arc
-            val startX =
-                centerX + (progressRadius + 6f) * cos(Math.toRadians(angle.toDouble())).toFloat()
-            val startY =
-                centerY + (progressRadius + 6f) * sin(Math.toRadians(angle.toDouble())).toFloat()
-            val endX =
-                centerX + (progressRadius - 7f) * cos(Math.toRadians(angle.toDouble())).toFloat()
-            val endY =
-                centerY + (progressRadius - 7f) * sin(Math.toRadians(angle.toDouble())).toFloat()
+            val angle = -120f + (i.toFloat() / (interval - 1)) * 60f // Distribute lines evenly inside the arc
+            val startX = centerX + (progressRadius + 6f) * cos(Math.toRadians(angle.toDouble())).toFloat()
+            val startY = centerY + (progressRadius + 6f) * sin(Math.toRadians(angle.toDouble())).toFloat()
+            val endX = centerX + (progressRadius - 7f) * cos(Math.toRadians(angle.toDouble())).toFloat()
+            val endY = centerY + (progressRadius - 7f) * sin(Math.toRadians(angle.toDouble())).toFloat()
 
             canvas.drawLine(startX, startY, endX, endY, linePaint)
         }
 
-        val textStartX =
-            centerX - progressRadius * cos(Math.toRadians(120.0)).toFloat() // Adjust horizontal position
-        val textStartY =
-            centerY - progressRadius * sin(Math.toRadians(120.0)).toFloat() + 25f // Adjust vertical position
+        val textStartX = centerX - progressRadius * cos(Math.toRadians(120.0)).toFloat() // Adjust horizontal position
+        val textStartY = centerY - progressRadius * sin(Math.toRadians(120.0)).toFloat() + 25f // Adjust vertical position
 
-        val textEndX =
-            centerX + progressRadius * cos(Math.toRadians(-120.0)).toFloat() // Adjust horizontal position
-        val textEndY =
-            centerY + progressRadius * sin(Math.toRadians(-60.0)).toFloat() + 25f // Adjust vertical position
+        val textEndX = centerX + progressRadius * cos(Math.toRadians(-120.0)).toFloat() // Adjust horizontal position
+        val textEndY = centerY + progressRadius * sin(Math.toRadians(-60.0)).toFloat() + 25f // Adjust vertical position
 
         val textPaint = Paint().apply {
             color = Color.WHITE
@@ -850,13 +842,9 @@ class AnalogWatchCanvasRenderer(
 
     private fun drawDate(canvas: Canvas, bounds: Rect) {
         val text = SimpleDateFormat("E d MMM", Locale.getDefault()).format(Date())
-        val textPaint = Paint().apply {
-            color = Color.WHITE
-            textAlign = Paint.Align.CENTER
-            textSize = 20f
-        }
+        val datePaint = getTextPaint(20f, Paint.Align.CENTER, Color.WHITE)
         val centerYDate = bounds.exactCenterY() + 30
-        canvas.drawText(text, bounds.exactCenterX(), centerYDate, textPaint)
+        canvas.drawText(text, bounds.exactCenterX(), centerYDate, datePaint)
     }
 
     /**
@@ -864,12 +852,8 @@ class AnalogWatchCanvasRenderer(
      */
     private fun drawTimeIn24HourFormat(canvas: Canvas, bounds: Rect) {
         val text = convertMillisTo24HourFormat(System.currentTimeMillis())
-        val textPaint = Paint().apply {
-            color = Color.WHITE
-            textAlign = Paint.Align.CENTER
-            textSize = 80f
-        }
-        canvas.drawText(text, bounds.exactCenterX(), bounds.exactCenterY(), textPaint)
+        val timePaint = getTextPaint(80f, Paint.Align.CENTER, Color.WHITE)
+        canvas.drawText(text, bounds.exactCenterX(), bounds.exactCenterY(), timePaint)
     }
 
     /**
