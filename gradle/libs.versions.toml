@@ -7,23 +7,40 @@ androidx-wear-compose = "1.1.0-rc01"
 androidx-wear-tiles = "1.1.0"
 androidx-wear-watchface = "1.2.1"
 compose = "1.5.0-beta01"
+concurrent-futures-ktx = "1.1.0"
 gson = "2.10.1"
+health-services-client = "1.0.0-rc01"
+hilt-android = "2.50"
+hilt-work = "1.1.0"
+horologistVersion = "0.1.8"
 ktlint = "0.50.0"
 org-jetbrains-kotlin = "1.9.21"
 org-jetbrains-kotlinx = "1.7.3"
 play-services-fitness = "21.1.0"
 play-services-auth = "20.7.0"
+appcompat = "1.6.1"
+material = "1.11.0"
+constraintlayout = "2.1.4"
+wear-tiles-renderer = "1.0.0-alpha01"
 
 [libraries]
 android-lint-gradle = "com.android.tools.lint:lint-gradle:31.2.2"
 android-material = "com.google.android.material:material:1.11.0"
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "androidx-activity" }
+androidx-concurrent-futures-ktx = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "concurrent-futures-ktx" }
 androidx-core-ktx = "androidx.core:core-ktx:1.12.0"
 androidx-databinding-viewbinding = "androidx.databinding:viewbinding:8.2.2"
+androidx-health-services-client = { module = "androidx.health:health-services-client", version.ref = "health-services-client" }
+androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hilt-work" }
+androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hilt-work" }
 androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle" }
 androidx-wear = "androidx.wear:wear:1.3.0"
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt-android" }
+hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt-android" }
+horologist-compose-tools = { module = "com.google.android.horologist:horologist-compose-tools", version.ref = "horologistVersion" }
+horologist-tiles = { module = "com.google.android.horologist:horologist-tiles", version.ref = "horologistVersion" }
 jacoco-ant = "org.jacoco:org.jacoco.ant:0.8.11"
 kotlin-annotation-processing-gradle = { module = "org.jetbrains.kotlin:kotlin-annotation-processing-gradle", version.ref = "org-jetbrains-kotlin" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "org-jetbrains-kotlin" }
@@ -40,6 +57,10 @@ wear-watchface-editor = { module = "androidx.wear.watchface:watchface-editor", v
 wear-watchface-style = { module = "androidx.wear.watchface:watchface-style", version.ref = "androidx-wear-watchface" }
 play-services-fitness = { group = "com.google.android.gms", name = "play-services-fitness", version.ref = "play-services-fitness" }
 play-services-auth = { group = "com.google.android.gms", name = "play-services-auth", version.ref = "play-services-auth" }
+appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+androidx-wear-tiles-renderer = { group = "androidx.wear", name = "wear-tiles-renderer", version.ref = "wear-tiles-renderer" }
 
 [plugins]
 com-android-application = { id = "com.android.application", version.ref = "android-gradle-plugin" }
