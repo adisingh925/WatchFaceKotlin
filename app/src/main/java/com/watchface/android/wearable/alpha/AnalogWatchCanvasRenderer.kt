@@ -565,6 +565,7 @@ class AnalogWatchCanvasRenderer(
 
     private fun getTextPaint(fontSize : Float, alignment: Paint.Align, textColor: Int) : Paint{
         return Paint().apply {
+            isAntiAlias = true
             color = textColor
             textAlign = alignment
             textSize = fontSize
@@ -835,6 +836,7 @@ class AnalogWatchCanvasRenderer(
         interval: Int
     ) {
         val paint = Paint().apply {
+            isAntiAlias = true
             color = Color.GREEN // Customize the arc color
             style = Paint.Style.STROKE // Use STROKE to create an outline
             strokeWidth = 10f // Adjust stroke width as needed
@@ -842,6 +844,7 @@ class AnalogWatchCanvasRenderer(
         }
 
         val totalPathPaint = Paint().apply {
+            isAntiAlias = true
             color = Color.argb(128, 128, 128, 128) // Adjust alpha for desired transparency
             style = Paint.Style.STROKE
             strokeWidth = 15f // Adjust stroke width as needed
@@ -849,6 +852,7 @@ class AnalogWatchCanvasRenderer(
         }
 
         val linePaint = Paint().apply {
+            isAntiAlias = true
             color = Color.argb(128, 128, 128, 128) // Color of the radial lines
             style = Paint.Style.STROKE
             strokeWidth = 2f // Adjust line stroke width as needed
@@ -888,12 +892,7 @@ class AnalogWatchCanvasRenderer(
         val textEndX = centerX + progressRadius * cos(Math.toRadians(-120.0)).toFloat() // Adjust horizontal position
         val textEndY = centerY + progressRadius * sin(Math.toRadians(-60.0)).toFloat() + 25f // Adjust vertical position
 
-        val textPaint = Paint().apply {
-            color = Color.WHITE
-            textAlign = Paint.Align.CENTER
-            textSize = 10f
-        }
-
+        val textPaint = getTextPaint(10f, Paint.Align.CENTER, Color.WHITE)
         canvas.drawText(timeLeft, textStartX, textStartY, textPaint)
         canvas.drawText(timePassed, textEndX, textEndY, textPaint)
     }
