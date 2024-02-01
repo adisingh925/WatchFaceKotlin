@@ -137,17 +137,19 @@ class AnalogWatchCanvasRenderer(
          */
         canvas.drawColor(Color.BLACK)
 
+        val primaryColor = Color.parseColor(SharedPreferences.read("primaryColor", "#d5f7e4"))
+        val secondaryColor = Color.parseColor(SharedPreferences.read("secondaryColor", "#68c4af"))
         val currentTime = LocalTime.now()
 
         /**
          * displaying time in 24h format in the canvas
          */
-        drawTimeIn24HourFormat(canvas, bounds)
+        drawTimeIn24HourFormat(canvas, bounds, primaryColor)
 
         /**
          * displaying the day of week, date and the month in the canvas
          */
-        drawDate(canvas, bounds)
+        drawDate(canvas, bounds, primaryColor)
 
         /**
          * display the heartbeat and the logo in the canvas
@@ -159,8 +161,8 @@ class AnalogWatchCanvasRenderer(
             /**
              * display number of steps and heartbeat in the canvas
              */
-            drawNumberOfSteps(canvas, bounds, stepCount.toString())
-            displayHeartbeatAndLogo(canvas, bounds, heartRateValue.toString())
+            drawNumberOfSteps(canvas, bounds, stepCount.toString(), primaryColor)
+            displayHeartbeatAndLogo(canvas, bounds, heartRateValue.toString(), primaryColor)
         } else {
             Log.d(TAG, "Permission not granted")
         }
@@ -208,11 +210,13 @@ class AnalogWatchCanvasRenderer(
                             (getNumberOf15MinIntervalBetweenLocalTime(
                                 i.startTime,
                                 i.endTime
-                            ) + 1).toInt()
+                            ) + 1).toInt(),
+                            primaryColor,
+                            secondaryColor
                         )
-                        displayCurrentScheduleWithTime(canvas, bounds, i.name, time)
+                        displayCurrentScheduleWithTime(canvas, bounds, i.name, time, primaryColor)
 
-                        drawCurrentScheduleHabits(canvas, i.habits)
+                        drawCurrentScheduleHabits(canvas, i.habits, secondaryColor)
                     }
 
                     val nextGreatest = findNextGreatest(currentTime)
@@ -223,7 +227,8 @@ class AnalogWatchCanvasRenderer(
                             nextGreatest.name,
                             "${convertLocalTimeTo24HourFormat(nextGreatest.startTime)} - ${
                                 convertLocalTimeTo24HourFormat(nextGreatest.endTime)
-                            }"
+                            }",
+                            primaryColor
                         )
                     }
                 }
@@ -233,7 +238,7 @@ class AnalogWatchCanvasRenderer(
         /**
          * display the battery percentage in the canvas
          */
-        drawBatteryPercentage(canvas, bounds, getWatchBatteryLevel(context))
+        drawBatteryPercentage(canvas, bounds, getWatchBatteryLevel(context), primaryColor)
     }
 
     private fun findNextGreatest(currentTime: LocalTime): InnerScheduleModel? {
@@ -304,9 +309,10 @@ class AnalogWatchCanvasRenderer(
         canvas: Canvas,
         bounds: Rect,
         scheduleName: String,
-        scheduleTime: String
+        scheduleTime: String,
+        primaryColor: Int
     ) {
-        val heartBeatPaint = getTextPaint(12f, Paint.Align.CENTER, Color.WHITE)
+        val heartBeatPaint = getTextPaint(12f, Paint.Align.CENTER, primaryColor)
         val text1Y = bounds.top + 40f
         val text2Y = bounds.top + 55f
 
@@ -331,9 +337,9 @@ class AnalogWatchCanvasRenderer(
         }
     }
 
-    private fun drawNumberOfSteps(canvas: Canvas, bounds: Rect, s: String) {
-        val stepsPaint = getTextPaint(15f, Paint.Align.LEFT, Color.WHITE)
-        val logoDrawable = getLogoDrawable(R.drawable.walk)
+    private fun drawNumberOfSteps(canvas: Canvas, bounds: Rect, s: String, primaryColor: Int) {
+        val stepsPaint = getTextPaint(15f, Paint.Align.LEFT, primaryColor)
+        val logoDrawable = getLogoDrawable(R.drawable.foot)
         val logoWidth = 20
         val logoHeight = 20
 
@@ -347,6 +353,7 @@ class AnalogWatchCanvasRenderer(
             (logoTop + logoHeight)
         )
 
+        logoDrawable.setTint(Color.WHITE)
         logoDrawable.draw(canvas)
 
         val additionalTextX = logoLeft + logoWidth + 4 // Adjust the horizontal position
@@ -359,9 +366,10 @@ class AnalogWatchCanvasRenderer(
     private fun drawBatteryPercentage(
         canvas: Canvas,
         bounds: Rect,
-        batteryPercentage: Pair<Int, Boolean>
+        batteryPercentage: Pair<Int, Boolean>,
+        primaryColor: Int
     ) {
-        val batteryPaint = getTextPaint(15f, Paint.Align.LEFT, Color.WHITE)
+        val batteryPaint = getTextPaint(15f, Paint.Align.LEFT, primaryColor)
         val text = "${batteryPercentage.first}%"
         val textX = 30f // Adjust the horizontal position
         val textY = centerY - 14f // Adjust the vertical position
@@ -440,9 +448,10 @@ class AnalogWatchCanvasRenderer(
 
     private fun drawCurrentScheduleHabits(
         canvas: Canvas,
-        habits: ArrayList<String>
+        habits: ArrayList<String>,
+        secondaryColor: Int
     ) {
-        val currentSchedulePaint = getTextPaint(15f, Paint.Align.CENTER, Color.WHITE)
+        val currentSchedulePaint = getTextPaint(15f, Paint.Align.CENTER, secondaryColor)
         val textOffset = 20f // Adjust vertical spacing between texts
 
         when (habits.size) {
@@ -505,9 +514,10 @@ class AnalogWatchCanvasRenderer(
     private fun drawNextSchedule(
         canvas: Canvas,
         nextScheduleName: String,
-        nextScheduleTime: String
+        nextScheduleTime: String,
+        primaryColor: Int
     ) {
-        val nextSchedulePaint = getTextPaint(12f, Paint.Align.CENTER, Color.WHITE)
+        val nextSchedulePaint = getTextPaint(12f, Paint.Align.CENTER, primaryColor)
 
         canvas.drawText(
             nextScheduleName,
@@ -527,8 +537,8 @@ class AnalogWatchCanvasRenderer(
     /**
      * This function will display the heartbeat and the logo in the canvas at the left
      */
-    private fun displayHeartbeatAndLogo(canvas: Canvas, bounds: Rect, heartBeat: String) {
-        val heartBeatPaint = getTextPaint(15f, Paint.Align.LEFT, Color.WHITE)
+    private fun displayHeartbeatAndLogo(canvas: Canvas, bounds: Rect, heartBeat: String, primaryColor: Int) {
+        val heartBeatPaint = getTextPaint(15f, Paint.Align.LEFT, primaryColor)
         val logoDrawable = getLogoDrawable(R.drawable.heartbeat1) // Replace this with your method to get the logo drawable
         val logoWidth = 20
         val logoHeight = 20
@@ -536,6 +546,7 @@ class AnalogWatchCanvasRenderer(
         val logoLeft = bounds.right.toFloat() - logoWidth - 50f // Adjust the horizontal position to the right
         val logoTop = bounds.centerY() - logoHeight / 2 - 40 // Center the image vertically
 
+        logoDrawable.setTint(Color.RED)
         logoDrawable.setBounds(
             logoLeft.toInt(),
             logoTop,
@@ -543,7 +554,6 @@ class AnalogWatchCanvasRenderer(
             (logoTop + logoHeight)
         )
 
-        logoDrawable.setTint(Color.WHITE)
         logoDrawable.draw(canvas)
 
         val additionalTextX = logoLeft + logoWidth + 5f // Adjust the horizontal position
@@ -562,11 +572,13 @@ class AnalogWatchCanvasRenderer(
         progress: Float,
         timePassed: String,
         timeLeft: String,
-        interval: Int
+        interval: Int,
+        primaryColor: Int,
+        secondaryColor: Int
     ) {
         val paint = Paint().apply {
             isAntiAlias = true
-            color = Color.GREEN // Customize the arc color
+            color = secondaryColor // Customize the arc color
             style = Paint.Style.STROKE // Use STROKE to create an outline
             strokeWidth = 10f // Adjust stroke width as needed
             strokeCap = Paint.Cap.ROUND // Use ROUND for rounded ends
@@ -584,7 +596,7 @@ class AnalogWatchCanvasRenderer(
             isAntiAlias = true
             color = Color.argb(128, 128, 128, 128) // Color of the radial lines
             style = Paint.Style.STROKE
-            strokeWidth = 2f // Adjust line stroke width as needed
+            strokeWidth = 1f // Adjust line stroke width as needed
             strokeCap = Paint.Cap.ROUND
         }
 
@@ -621,7 +633,7 @@ class AnalogWatchCanvasRenderer(
         val textEndX = centerX + progressRadius * cos(Math.toRadians(-120.0)).toFloat() // Adjust horizontal position
         val textEndY = centerY + progressRadius * sin(Math.toRadians(-60.0)).toFloat() + 25f // Adjust vertical position
 
-        val textPaint = getTextPaint(10f, Paint.Align.CENTER, Color.WHITE)
+        val textPaint = getTextPaint(10f, Paint.Align.CENTER, primaryColor)
         canvas.drawText(timeLeft, textStartX, textStartY, textPaint)
         canvas.drawText(timePassed, textEndX, textEndY, textPaint)
     }
@@ -630,9 +642,9 @@ class AnalogWatchCanvasRenderer(
         return ContextCompat.getDrawable(context, itemName)!!
     }
 
-    private fun drawDate(canvas: Canvas, bounds: Rect) {
+    private fun drawDate(canvas: Canvas, bounds: Rect, primaryColor: Int) {
         val text = SimpleDateFormat("E d MMM", Locale.getDefault()).format(Date())
-        val datePaint = getTextPaint(20f, Paint.Align.CENTER, Color.WHITE)
+        val datePaint = getTextPaint(20f, Paint.Align.CENTER, primaryColor)
         val centerYDate = bounds.exactCenterY() + 30
         canvas.drawText(text, bounds.exactCenterX(), centerYDate, datePaint)
     }
@@ -640,9 +652,9 @@ class AnalogWatchCanvasRenderer(
     /**
      * This function will draw the time in 24h format in the canvas
      */
-    private fun drawTimeIn24HourFormat(canvas: Canvas, bounds: Rect) {
+    private fun drawTimeIn24HourFormat(canvas: Canvas, bounds: Rect, primaryColor: Int) {
         val text = convertMillisTo24HourFormat(System.currentTimeMillis())
-        val timePaint = getTextPaint(80f, Paint.Align.CENTER, Color.WHITE)
+        val timePaint = getTextPaint(80f, Paint.Align.CENTER, primaryColor)
         canvas.drawText(text, bounds.exactCenterX(), bounds.exactCenterY(), timePaint)
     }
 
