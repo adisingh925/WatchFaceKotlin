@@ -137,9 +137,21 @@ class AnalogWatchCanvasRenderer(
          */
         canvas.drawColor(Color.BLACK)
 
-        val primaryColor = Color.parseColor(SharedPreferences.read("primaryColor", "#d5f7e4"))
-        val secondaryColor = Color.parseColor(SharedPreferences.read("secondaryColor", "#68c4af"))
         val currentTime = LocalTime.now()
+
+        val primaryColor: Int = try {
+            Color.parseColor(SharedPreferences.read("primaryColor", "#d5f7e4"))
+        }catch (e : Exception){
+            Log.d(TAG, "Invalid primary color code")
+            Color.parseColor("#d5f7e4")
+        }
+
+        val secondaryColor: Int = try {
+            Color.parseColor(SharedPreferences.read("secondaryColor", "#68c4af"))
+        }catch (e : Exception) {
+            Log.d(TAG, "Invalid secondary color code")
+            Color.parseColor("#68c4af")
+        }
 
         /**
          * displaying time in 24h format in the canvas

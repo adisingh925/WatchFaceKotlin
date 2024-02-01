@@ -35,21 +35,27 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/color_style_picker_button"
+        <EditText
+            android:id="@+id/primaryColor"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            style="@style/Widget.WatchFace.Button"
-            app:icon="@drawable/color_style_icon"
-            app:iconPadding="@dimen/activity_config_style_picker_icon_padding"
-            android:padding="@dimen/no_padding"
-            android:gravity="start|center_vertical"
-            android:text="@string/activity_config_color_style_picker_label"
-            android:textAppearance="?attr/textAppearanceButton"
-            android:contentDescription="@string/activity_config_change_color_style_button_content_description"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/pre_slider_spacer1" />
+            android:textColor="@color/white"
+            android:hint="Input primary color"
+            android:textColorHint="@color/gray_white"
+            app:layout_constraintTop_toBottomOf="@id/pre_slider_spacer1"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            android:layout_height="wrap_content"/>
+
+        <EditText
+            android:id="@+id/secondaryColor"
+            android:layout_width="0dp"
+            android:textColor="@color/white"
+            android:hint="Input secondary color"
+            android:textColorHint="@color/gray_white"
+            app:layout_constraintTop_toBottomOf="@id/primaryColor"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            android:layout_height="wrap_content"/>
 
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/schedule_switch"
@@ -64,7 +70,7 @@
             android:contentDescription="displays or hides the schedule data"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/color_style_picker_button" />
+            app:layout_constraintTop_toBottomOf="@+id/secondaryColor" />
 
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/vibration_switch"
