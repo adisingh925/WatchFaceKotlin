@@ -347,7 +347,7 @@ class AnalogWatchCanvasRenderer(
 
         logoDrawable.draw(canvas)
 
-        val additionalTextX = logoLeft + logoWidth // Adjust the horizontal position
+        val additionalTextX = logoLeft + logoWidth + 4 // Adjust the horizontal position
         val additionalTextY = bounds.centerY() + stepsPaint.textSize / 2 - 13 // Center the additional text vertically
 
         // Draw the additional text
@@ -527,7 +527,7 @@ class AnalogWatchCanvasRenderer(
      */
     private fun displayHeartbeatAndLogo(canvas: Canvas, bounds: Rect, heartBeat: String) {
         val heartBeatPaint = getTextPaint(15f, Paint.Align.LEFT, Color.WHITE)
-        val logoDrawable = getLogoDrawable(R.drawable.heartbeat) // Replace this with your method to get the logo drawable
+        val logoDrawable = getLogoDrawable(R.drawable.heartbeat1) // Replace this with your method to get the logo drawable
         val logoWidth = 20
         val logoHeight = 20
 
@@ -541,6 +541,7 @@ class AnalogWatchCanvasRenderer(
             (logoTop + logoHeight)
         )
 
+        logoDrawable.setTint(Color.WHITE)
         logoDrawable.draw(canvas)
 
         val additionalTextX = logoLeft + logoWidth + 5f // Adjust the horizontal position
