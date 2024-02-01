@@ -203,7 +203,7 @@ class AnalogWatchCanvasRenderer(
                                 i.startTime,
                                 i.endTime
                             ).toFloat())),
-                            getDifferenceOfLocalTime(currentTime, i.startTime),
+                            getDifferenceOfLocalTime(i.startTime, currentTime),
                             getDifferenceOfLocalTime(currentTime, i.endTime),
                             (getNumberOf15MinIntervalBetweenLocalTime(
                                 i.startTime,
@@ -263,6 +263,8 @@ class AnalogWatchCanvasRenderer(
 
     private fun getDifferenceOfLocalTime(time1: LocalTime, time2: LocalTime): String {
         val duration = Duration.between(time1, time2)
+
+        Log.d(TAG, "getDifferenceOfLocalTime() duration: $duration")
 
         val hours = duration.toHours()
         val minutes = duration.toMinutes() % 60
