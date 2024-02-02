@@ -16,7 +16,7 @@
 <resources>
     <string name="app_name" translatable="false">WatchFace Alpha (Kotlin)</string>
 
-    <string name="analog_watch_face_name" translatable="false">Alpha Analog</string>
+    <string name="analog_watch_face_name" translatable="false">Alex Digital Clock</string>
 
     <!-- Name of watchface style category for selecting the color theme [CHAR LIMIT=20] -->
     <string name="colors_style_setting">Colors</string>

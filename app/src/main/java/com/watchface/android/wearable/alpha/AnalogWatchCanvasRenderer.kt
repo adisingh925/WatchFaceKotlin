@@ -179,11 +179,11 @@ class AnalogWatchCanvasRenderer(
             Log.d(TAG, "Permission not granted")
         }
 
-        if(SharedPreferences.read("schedule", 0) == 1) {
+        if(SharedPreferences.read("schedule", 1) == 1) {
             if (scheduleModel.days.contains(getCurrentDayShortForm())) {
                 for (i in scheduleModel.schedule) {
                     if (currentTime.isAfter(i.startTime) && currentTime.isBefore(i.endTime)) {
-                        if(SharedPreferences.read("vibration", 0) == 1) {
+                        if(SharedPreferences.read("vibration", 1) == 1) {
                             if(Duration.between(currentTime,i.endTime).seconds.toInt() == i.vibrateBeforeEndSecs){
                                 if(nameMap[i.name] == 0) {
                                     nameMap[i.name] = null
