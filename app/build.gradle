@@ -91,4 +91,5 @@ dependencies {
     implementation libs.gson
     implementation libs.appcompat
     implementation libs.constraintlayout
+  implementation(libs.timelineview)
 }

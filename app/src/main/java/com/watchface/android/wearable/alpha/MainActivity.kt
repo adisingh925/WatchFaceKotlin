@@ -1,7 +1,9 @@
 package com.watchface.android.wearable.alpha
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.gson.GsonBuilder
 import com.watchface.android.wearable.alpha.adapter.RecyclerAdapter
@@ -11,7 +13,7 @@ import com.watchface.android.wearable.alpha.utils.TimeDeserializer
 import java.io.InputStream
 import java.time.LocalTime
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
 
     private val binding by lazy{
         ActivityMainBinding.inflate(layoutInflater)
@@ -22,7 +24,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val adapter by lazy{
-        RecyclerAdapter(this)
+        RecyclerAdapter(this, this)
     }
 
     private lateinit var scheduleModel: ScheduleModel
@@ -60,5 +62,13 @@ class MainActivity : AppCompatActivity() {
 
         scheduleModel = gson.fromJson(jsonString, ScheduleModel::class.java)
         scheduleModel.schedule.sortBy { it.endTime }
+    }
+
+    override fun onItemClick(data: String) {
+        Log.d("MainActivity", "Clicked on $data")
+        val intent = Intent(this, TimeLine::class.java)
+        intent.putExtra("day", data)
+
+        startActivity(intent)
     }
 }

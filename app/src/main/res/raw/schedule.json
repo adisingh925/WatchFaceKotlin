@@ -4,13 +4,14 @@
     "Tue",
     "Wed",
     "Thu",
-    "Fri"
+    "Fri",
+    "Sat"
   ],
   "schedule": [
     {
       "name": "Work",
-      "startTime": "09:00",
-      "endTime": "10:30",
+      "startTime": "02:00",
+      "endTime": "04:30",
       "habits": [
         "Check email",
         "Post update"

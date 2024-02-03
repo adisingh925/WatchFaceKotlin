@@ -6,13 +6,18 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.watchface.android.wearable.alpha.databinding.RecyclerViewItemBinding
 
-class RecyclerAdapter(private val context: Context) : RecyclerView.Adapter<RecyclerAdapter.MyViewHolder>() {
+class RecyclerAdapter(private val context: Context, private val onItemClickListener: OnItemClickListener) : RecyclerView.Adapter<RecyclerAdapter.MyViewHolder>() {
 
     private lateinit var binding: RecyclerViewItemBinding
     private var days = ArrayList<String>()
 
+    interface OnItemClickListener {
+        fun onItemClick(data: String)
+    }
+
     class MyViewHolder(binding: RecyclerViewItemBinding) : RecyclerView.ViewHolder(binding.root) {
         val day = binding.day
+        val cardView = binding.cardView
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
@@ -26,6 +31,10 @@ class RecyclerAdapter(private val context: Context) : RecyclerView.Adapter<Recyc
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         holder.day.text = days[position]
+
+        holder.cardView.setOnClickListener {
+            onItemClickListener.onItemClick(days[position])
+        }
     }
 
     fun setData(data: ArrayList<String>){

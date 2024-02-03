@@ -21,6 +21,7 @@ play-services-auth = "20.7.0"
 appcompat = "1.6.1"
 material = "1.11.0"
 constraintlayout = "2.1.4"
+timelineview = "1.0.0"
 wear-tiles-renderer = "1.0.0-alpha01"
 
 [libraries]
@@ -47,6 +48,7 @@ kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", v
 kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "org-jetbrains-kotlin" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "org-jetbrains-kotlinx" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "org-jetbrains-kotlinx" }
+timelineview = { module = "io.github.akri16:timelineview", version.ref = "timelineview" }
 wear-watchface = { module = "androidx.wear.watchface:watchface", version.ref = "androidx-wear-watchface" }
 wear-watchface-client = { module = "androidx.wear.watchface:watchface-client", version.ref = "androidx-wear-watchface" }
 wear-watchface-complications-data = { module = "androidx.wear.watchface:watchface-complications-data", version.ref = "androidx-wear-watchface" }
