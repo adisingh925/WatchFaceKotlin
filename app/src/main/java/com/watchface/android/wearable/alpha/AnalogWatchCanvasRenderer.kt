@@ -11,6 +11,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
+import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -29,6 +30,7 @@ import com.google.gson.GsonBuilder
 import com.watchface.android.wearable.alpha.model.InnerScheduleModel
 import com.watchface.android.wearable.alpha.model.MainSchedule
 import com.watchface.android.wearable.alpha.sharedpreferences.SharedPreferences
+import com.watchface.android.wearable.alpha.utils.Constants
 import com.watchface.android.wearable.alpha.utils.TimeDeserializer
 import java.io.InputStream
 import java.text.SimpleDateFormat
@@ -87,6 +89,9 @@ class AnalogWatchCanvasRenderer(
         sensorManager.registerListener(this, heartRateSensor, SensorManager.SENSOR_DELAY_NORMAL)
     }
 
+    /**
+     * This function will read the json file and parse it
+     */
     private fun readJsonFile(resourceId: Int): String {
         val inputStream: InputStream = context.resources.openRawResource(resourceId)
         val size: Int = inputStream.available()
@@ -141,18 +146,20 @@ class AnalogWatchCanvasRenderer(
 
         val currentTime = LocalTime.now()
 
+        // I am setting the primary color in here, if the color is not valid then I will set the default color
         val primaryColor: Int = try {
-            Color.parseColor(SharedPreferences.read("primaryColor", "#d5f7e4"))
+            Color.parseColor(SharedPreferences.read(PRIMARY_COLOR, Constants.DEFAULT_PRIMARY_COLOR))
         }catch (e : Exception){
             Log.d(TAG, "Invalid primary color code")
-            Color.parseColor("#d5f7e4")
+            Color.parseColor(Constants.DEFAULT_PRIMARY_COLOR)
         }
 
+        // I am setting the secondary color in here, if the color is not valid then I will set the default color
         val secondaryColor: Int = try {
-            Color.parseColor(SharedPreferences.read("secondaryColor", "#68c4af"))
+            Color.parseColor(SharedPreferences.read(SECONDARY_COLOR, Constants.DEFAULT_SECONDARY_COLOR))
         }catch (e : Exception) {
             Log.d(TAG, "Invalid secondary color code")
-            Color.parseColor("#68c4af")
+            Color.parseColor(Constants.DEFAULT_SECONDARY_COLOR)
         }
 
         /**
@@ -169,12 +176,13 @@ class AnalogWatchCanvasRenderer(
          * display the heartbeat and the logo in the canvas
          */
 
-        // Check for permission before accessing the sensor
+        /**
+         * check if the permission is granted or not
+         * if the permission is granted then display the number of steps and heartbeat in the canvas
+         */
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.BODY_SENSORS)
             == PackageManager.PERMISSION_GRANTED) {
-            /**
-             * display number of steps and heartbeat in the canvas
-             */
+
             drawNumberOfSteps(canvas, bounds, stepCount.toString(), primaryColor)
             displayHeartbeatAndLogo(canvas, bounds, heartRateValue.toString(), primaryColor)
         } else {
@@ -362,7 +370,7 @@ class AnalogWatchCanvasRenderer(
         val logoHeight = 20
 
         val logoLeft = bounds.right.toFloat() - logoWidth - 60f
-        val logoTop = bounds.centerY() - logoHeight / 2 - 10
+        val logoTop = bounds.centerY() - logoHeight / 2 - 15
 
         logoDrawable.setBounds(
             logoLeft.toInt(),
@@ -371,11 +379,11 @@ class AnalogWatchCanvasRenderer(
             (logoTop + logoHeight)
         )
 
-        logoDrawable.setTint(Color.WHITE)
+        logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
         logoDrawable.draw(canvas)
 
         val additionalTextX = logoLeft + logoWidth + 4 // Adjust the horizontal position
-        val additionalTextY = bounds.centerY() + stepsPaint.textSize / 2 - 13 // Center the additional text vertically
+        val additionalTextY = bounds.centerY() + stepsPaint.textSize / 2 - 18 // Center the additional text vertically
 
         // Draw the additional text
         canvas.drawText(s, additionalTextX, additionalTextY, stepsPaint)
@@ -390,7 +398,7 @@ class AnalogWatchCanvasRenderer(
         val batteryPaint = getTextPaint(15f, Paint.Align.LEFT, primaryColor)
         val text = "${batteryPercentage.first}%"
         val textX = 30f // Adjust the horizontal position
-        val textY = centerY - 14f // Adjust the vertical position
+        val textY = centerY - 19f // Adjust the vertical position
         canvas.drawText(text, textX, textY, batteryPaint)
 
         // Draw an image on the left side of the text
@@ -440,7 +448,7 @@ class AnalogWatchCanvasRenderer(
         val logoWidth = 20
         val logoHeight = 20
         val logoLeft = 10f // Adjust the horizontal position
-        val logoTop = bounds.exactCenterY() - 30f
+        val logoTop = bounds.exactCenterY() - 35f
 
         logoDrawable.setBounds(
             logoLeft.toInt(),
@@ -450,14 +458,14 @@ class AnalogWatchCanvasRenderer(
         )
 
         if(batteryPercentage.second) {
-            logoDrawable.setTint(Color.GREEN)
+            logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
         }else{
             if(batteryPercentage.first <= 15){
-                logoDrawable.setTint(Color.RED)
+                logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
             }else if(batteryPercentage.first <= 50) {
-                logoDrawable.setTint(Color.YELLOW)
+                logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
             }else if(batteryPercentage.first <= 100) {
-                logoDrawable.setTint(Color.GREEN)
+                logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
             }
         }
 
@@ -561,10 +569,10 @@ class AnalogWatchCanvasRenderer(
         val logoWidth = 20
         val logoHeight = 20
 
-        val logoLeft = bounds.right.toFloat() - logoWidth - 50f // Adjust the horizontal position to the right
-        val logoTop = bounds.centerY() - logoHeight / 2 - 40 // Center the image vertically
+        val logoLeft = bounds.right.toFloat() - logoWidth - 60f // Adjust the horizontal position to the right
+        val logoTop = bounds.centerY() - logoHeight / 2 - 45 // Center the image vertically
 
-        logoDrawable.setTint(Color.RED)
+        logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
         logoDrawable.setBounds(
             logoLeft.toInt(),
             logoTop,
@@ -575,7 +583,7 @@ class AnalogWatchCanvasRenderer(
         logoDrawable.draw(canvas)
 
         val additionalTextX = logoLeft + logoWidth + 5f // Adjust the horizontal position
-        val additionalTextY = bounds.centerY() + heartBeatPaint.textSize / 2 - 42 // Center the additional text vertically
+        val additionalTextY = bounds.centerY() + heartBeatPaint.textSize / 2 - 47 // Center the additional text vertically
 
         // Draw the additional text
         canvas.drawText(heartBeat, additionalTextX, additionalTextY, heartBeatPaint)
@@ -687,8 +695,13 @@ class AnalogWatchCanvasRenderer(
 
     companion object {
         private const val TAG = "DigitalWatchCanvasRenderer"
+        private const val PRIMARY_COLOR = "primaryColor"
+        private const val SECONDARY_COLOR = "secondaryColor"
     }
 
+    /**
+     * This function will be called when the sensor value is changed
+     */
     override fun onSensorChanged(event: SensorEvent?) {
         Log.d(TAG, "onSensorChanged()")
         if (event!!.sensor.type == Sensor.TYPE_HEART_RATE) {
