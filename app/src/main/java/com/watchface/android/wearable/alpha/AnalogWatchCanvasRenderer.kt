@@ -1,4 +1,3 @@
-
 package com.watchface.android.wearable.alpha
 
 import android.Manifest
@@ -109,7 +108,7 @@ class AnalogWatchCanvasRenderer(
             .create()
 
         mainSchedule = gson.fromJson(jsonString, MainSchedule::class.java)
-        for (scheduleModel in mainSchedule.mainSchedule){
+        for (scheduleModel in mainSchedule.mainSchedule) {
             scheduleModel.schedule.sortBy { it.endTime }
         }
     }
@@ -149,15 +148,20 @@ class AnalogWatchCanvasRenderer(
         // I am setting the primary color in here, if the color is not valid then I will set the default color
         val primaryColor: Int = try {
             Color.parseColor(SharedPreferences.read(PRIMARY_COLOR, Constants.DEFAULT_PRIMARY_COLOR))
-        }catch (e : Exception){
+        } catch (e: Exception) {
             Log.d(TAG, "Invalid primary color code")
             Color.parseColor(Constants.DEFAULT_PRIMARY_COLOR)
         }
 
         // I am setting the secondary color in here, if the color is not valid then I will set the default color
         val secondaryColor: Int = try {
-            Color.parseColor(SharedPreferences.read(SECONDARY_COLOR, Constants.DEFAULT_SECONDARY_COLOR))
-        }catch (e : Exception) {
+            Color.parseColor(
+                SharedPreferences.read(
+                    SECONDARY_COLOR,
+                    Constants.DEFAULT_SECONDARY_COLOR
+                )
+            )
+        } catch (e: Exception) {
             Log.d(TAG, "Invalid secondary color code")
             Color.parseColor(Constants.DEFAULT_SECONDARY_COLOR)
         }
@@ -181,7 +185,8 @@ class AnalogWatchCanvasRenderer(
          * if the permission is granted then display the number of steps and heartbeat in the canvas
          */
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.BODY_SENSORS)
-            == PackageManager.PERMISSION_GRANTED) {
+            == PackageManager.PERMISSION_GRANTED
+        ) {
 
             drawNumberOfSteps(canvas, bounds, stepCount.toString(), primaryColor)
             displayHeartbeatAndLogo(canvas, bounds, heartRateValue.toString(), primaryColor)
@@ -189,21 +194,29 @@ class AnalogWatchCanvasRenderer(
             Log.d(TAG, "Permission not granted")
         }
 
-        if(SharedPreferences.read("schedule", 1) == 1) {
-            for(scheduleModel in mainSchedule.mainSchedule){
+        if (SharedPreferences.read("schedule", 1) == 1) {
+            for (scheduleModel in mainSchedule.mainSchedule) {
                 if (scheduleModel.days.contains(getCurrentDayShortForm())) {
                     for (i in scheduleModel.schedule) {
                         if (currentTime.isAfter(i.startTime) && currentTime.isBefore(i.endTime)) {
-                            if(SharedPreferences.read("vibration", 1) == 1) {
-                                if(Duration.between(currentTime,i.endTime).seconds.toInt() == i.vibrateBeforeEndSecs){
-                                    if(nameMap[i.name] == 0) {
+                            if (SharedPreferences.read("vibration", 1) == 1) {
+                                if (Duration.between(
+                                        currentTime,
+                                        i.endTime
+                                    ).seconds.toInt() == i.vibrateBeforeEndSecs
+                                ) {
+                                    if (nameMap[i.name] == 0) {
                                         nameMap[i.name] = null
                                         vibrate(i.vibrateBeforeEnd.toLongArray())
                                     }
                                 }
 
-                                if(Duration.between(i.startTime, currentTime).seconds.toInt() <= 1){
-                                    if(nameMap[i.name] == null) {
+                                if (Duration.between(
+                                        i.startTime,
+                                        currentTime
+                                    ).seconds.toInt() <= 1
+                                ) {
+                                    if (nameMap[i.name] == null) {
                                         nameMap[i.name] = 0
                                         vibrate(i.vibrateOnStart.toLongArray())
                                     }
@@ -237,7 +250,13 @@ class AnalogWatchCanvasRenderer(
                                 primaryColor,
                                 secondaryColor
                             )
-                            displayCurrentScheduleWithTime(canvas, bounds, i.name, time, primaryColor)
+                            displayCurrentScheduleWithTime(
+                                canvas,
+                                bounds,
+                                i.name,
+                                time,
+                                primaryColor
+                            )
 
                             drawCurrentScheduleHabits(canvas, i.habits, secondaryColor)
                         }
@@ -268,7 +287,7 @@ class AnalogWatchCanvasRenderer(
     private fun findNextGreatest(currentTime: LocalTime): InnerScheduleModel? {
         var nextGreaterValue: InnerScheduleModel? = null
 
-        for(scheduleModel in mainSchedule.mainSchedule){
+        for (scheduleModel in mainSchedule.mainSchedule) {
             for (element in scheduleModel.schedule) {
                 if (element.startTime > currentTime) {
                     nextGreaterValue = element
@@ -322,7 +341,7 @@ class AnalogWatchCanvasRenderer(
         return LocalDate.now().format(formatter)
     }
 
-    private fun getTextPaint(fontSize : Float, alignment: Paint.Align, textColor: Int) : Paint{
+    private fun getTextPaint(fontSize: Float, alignment: Paint.Align, textColor: Int): Paint {
         return Paint().apply {
             isAntiAlias = true
             color = textColor
@@ -365,21 +384,22 @@ class AnalogWatchCanvasRenderer(
 
     private fun drawNumberOfSteps(canvas: Canvas, bounds: Rect, s: String, primaryColor: Int) {
         val stepsPaint = getTextPaint(15f, Paint.Align.LEFT, primaryColor)
-        val logoDrawable = getLogoDrawable(R.drawable.foot)
+
         val logoWidth = 20
         val logoHeight = 20
-
         val logoLeft = bounds.right.toFloat() - logoWidth - 60f
         val logoTop = bounds.centerY() - logoHeight / 2 - 15
 
-        logoDrawable.setBounds(
+
+        val logoDrawable = getLogoDrawable(
+            getLogoDrawable(R.drawable.foot),
+            Constants.BATTERY_HEART_FOOT_COLOR,
             logoLeft.toInt(),
             logoTop,
             (logoLeft + logoWidth).toInt(),
             (logoTop + logoHeight)
         )
 
-        logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
         logoDrawable.draw(canvas)
 
         val additionalTextX = logoLeft + logoWidth + 4 // Adjust the horizontal position
@@ -404,67 +424,39 @@ class AnalogWatchCanvasRenderer(
         // Draw an image on the left side of the text
         var batteryDrawable = 0
 
-        if(batteryPercentage.second){
+        if (batteryPercentage.second) {
             batteryDrawable = R.drawable.battery_charging
-        }else{
-            when {
-                batteryPercentage.first <= 5 -> {
-                    batteryDrawable = R.drawable.battery_alert
-                }
-                batteryPercentage.first <= 10 -> {
-                    batteryDrawable = R.drawable.battery_0
-                }
-                batteryPercentage.first <= 20 -> {
-                    batteryDrawable = R.drawable.battery_1
-                }
-                batteryPercentage.first <= 30 -> {
-                    batteryDrawable = R.drawable.battery_2
-                }
-                batteryPercentage.first < 50 -> {
-                    batteryDrawable = R.drawable.battery_3
-                }
-                batteryPercentage.first == 50 -> {
-                    batteryDrawable = R.drawable.battery_4
-                }
-                batteryPercentage.first <= 60 -> {
-                    batteryDrawable = R.drawable.battery_5
-                }
-                batteryPercentage.first <= 70 -> {
-                    batteryDrawable = R.drawable.battery_6
-                }
-                batteryPercentage.first <= 80 -> {
-                    batteryDrawable = R.drawable.battery_6
-                }
-                batteryPercentage.first <= 90 -> {
-                    batteryDrawable = R.drawable.battery_full
-                }
-                batteryPercentage.first <= 100 -> {
-                    batteryDrawable = R.drawable.battery_full
-                }
+        } else {
+            batteryDrawable = when {
+                batteryPercentage.first <= 5 -> R.drawable.battery_alert
+                batteryPercentage.first <= 10 -> R.drawable.battery_0
+                batteryPercentage.first <= 20 -> R.drawable.battery_1
+                batteryPercentage.first <= 30 -> R.drawable.battery_2
+                batteryPercentage.first < 50 -> R.drawable.battery_3
+                batteryPercentage.first <= 60 -> R.drawable.battery_5
+                batteryPercentage.first <= 70 -> R.drawable.battery_6
+                batteryPercentage.first <= 80 -> R.drawable.battery_6
+                batteryPercentage.first <= 90 -> R.drawable.battery_full
+                batteryPercentage.first <= 100 -> R.drawable.battery_full
+                else -> R.drawable.battery_full // Default case, handle unexpected values
             }
         }
 
-        val logoDrawable = getLogoDrawable(batteryDrawable) // Replace this with your method to get the logo drawable
         val logoWidth = 20
         val logoHeight = 20
         val logoLeft = 10f // Adjust the horizontal position
         val logoTop = bounds.exactCenterY() - 35f
 
-        logoDrawable.setBounds(
-            logoLeft.toInt(),
-            logoTop.toInt(),
-            (logoLeft + logoWidth).toInt(),
-            (logoTop + logoHeight).toInt()
-        )
+        val logoDrawable = getLogoDrawable(getLogoDrawable(batteryDrawable), Constants.BATTERY_HEART_FOOT_COLOR, logoLeft.toInt(), logoTop.toInt(), (logoLeft + logoWidth).toInt(), (logoTop + logoHeight).toInt())
 
-        if(batteryPercentage.second) {
+        if (batteryPercentage.second) {
             logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
-        }else{
-            if(batteryPercentage.first <= 15){
+        } else {
+            if (batteryPercentage.first <= 15) {
                 logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
-            }else if(batteryPercentage.first <= 50) {
+            } else if (batteryPercentage.first <= 50) {
                 logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
-            }else if(batteryPercentage.first <= 100) {
+            } else if (batteryPercentage.first <= 100) {
                 logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
             }
         }
@@ -480,60 +472,22 @@ class AnalogWatchCanvasRenderer(
         val currentSchedulePaint = getTextPaint(15f, Paint.Align.CENTER, secondaryColor)
         val textOffset = 20f // Adjust vertical spacing between texts
 
-        when (habits.size) {
-            1 -> {
-                canvas.drawText(
-                    habits[0],
-                    (canvas.width / 2).toFloat(),
-                    canvas.height - currentSchedulePaint.textSize - textOffset * 4,
-                    currentSchedulePaint
-                )
-            }
-            2 -> {
-                canvas.drawText(
-                    habits[0],
-                    (canvas.width / 2).toFloat(),
-                    canvas.height - currentSchedulePaint.textSize - textOffset * 4,
-                    currentSchedulePaint
-                )
+        val startY = canvas.height - currentSchedulePaint.textSize - textOffset * 4
 
-                canvas.drawText(
-                    habits[1],
-                    (canvas.width / 2).toFloat(),
-                    canvas.height - currentSchedulePaint.textSize - textOffset * 3,
-                    currentSchedulePaint
-                )
-            }
-            3 -> {
-                canvas.drawText(
-                    "${habits[0]} | ${habits[1]}",
-                    (canvas.width / 2).toFloat(),
-                    canvas.height - currentSchedulePaint.textSize - textOffset * 4,
-                    currentSchedulePaint
-                )
+        for (i in habits.indices step 2) {
+            val habit = habits[i]
 
-                canvas.drawText(
-                    habits[2],
-                    (canvas.width / 2).toFloat(),
-                    canvas.height - currentSchedulePaint.textSize - textOffset * 3,
-                    currentSchedulePaint
-                )
+            val text = when (i) {
+                habits.size - 1 -> habit
+                else -> "$habit | ${habits[i + 1]}"
             }
-            4 -> {
-                canvas.drawText(
-                    "${habits[0]} | ${habits[1]}",
-                    (canvas.width / 2).toFloat(),
-                    canvas.height - currentSchedulePaint.textSize - textOffset * 4,
-                    currentSchedulePaint
-                )
 
-                canvas.drawText(
-                    "${habits[2]} | ${habits[3]}",
-                    (canvas.width / 2).toFloat(),
-                    canvas.height - currentSchedulePaint.textSize - textOffset * 3,
-                    currentSchedulePaint
-                )
-            }
+            canvas.drawText(
+                text,
+                (canvas.width / 2).toFloat(),
+                startY + textOffset * (i / 2),
+                currentSchedulePaint
+            )
         }
     }
 
@@ -563,17 +517,23 @@ class AnalogWatchCanvasRenderer(
     /**
      * This function will display the heartbeat and the logo in the canvas at the left
      */
-    private fun displayHeartbeatAndLogo(canvas: Canvas, bounds: Rect, heartBeat: String, primaryColor: Int) {
+    private fun displayHeartbeatAndLogo(
+        canvas: Canvas,
+        bounds: Rect,
+        heartBeat: String,
+        primaryColor: Int
+    ) {
         val heartBeatPaint = getTextPaint(15f, Paint.Align.LEFT, primaryColor)
-        val logoDrawable = getLogoDrawable(R.drawable.heartbeat) // Replace this with your method to get the logo drawable
         val logoWidth = 20
         val logoHeight = 20
 
         val logoLeft = bounds.right.toFloat() - logoWidth - 60f // Adjust the horizontal position to the right
         val logoTop = bounds.centerY() - logoHeight / 2 - 45 // Center the image vertically
 
-        logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
-        logoDrawable.setBounds(
+
+        val logoDrawable = getLogoDrawable(
+            getLogoDrawable(R.drawable.heartbeat),
+            Constants.BATTERY_HEART_FOOT_COLOR,
             logoLeft.toInt(),
             logoTop,
             (logoLeft + logoWidth).toInt(),
@@ -587,6 +547,19 @@ class AnalogWatchCanvasRenderer(
 
         // Draw the additional text
         canvas.drawText(heartBeat, additionalTextX, additionalTextY, heartBeatPaint)
+    }
+
+    private fun getLogoDrawable(
+        drawable: Drawable,
+        color: Int,
+        left: Int,
+        top: Int,
+        right: Int,
+        bottom: Int
+    ): Drawable {
+        drawable.setTint(color)
+        drawable.setBounds(left, top, right, bottom)
+        return drawable
     }
 
     /**
