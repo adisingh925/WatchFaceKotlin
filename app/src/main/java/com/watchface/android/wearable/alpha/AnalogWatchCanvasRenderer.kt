@@ -10,7 +10,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
-import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -421,8 +420,7 @@ class AnalogWatchCanvasRenderer(
         val textY = centerY - 19f // Adjust the vertical position
         canvas.drawText(text, textX, textY, batteryPaint)
 
-        // Draw an image on the left side of the text
-        var batteryDrawable = 0
+        val batteryDrawable: Int
 
         if (batteryPercentage.second) {
             batteryDrawable = R.drawable.battery_charging
