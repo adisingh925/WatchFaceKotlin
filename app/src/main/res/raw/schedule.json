@@ -1,79 +1,161 @@
 {
-  "days": [
-    "Mon",
-    "Tue",
-    "Wed",
-    "Thu",
-    "Fri",
-    "Sat"
-  ],
-  "schedule": [
+  "mainSchedule": [
     {
-      "name": "Work",
-      "startTime": "02:00",
-      "endTime": "04:30",
-      "habits": [
-        "Check email",
-        "Post update"
+      "days": [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri"
       ],
-      "vibrateOnStart": [
-        500,
-        1000,
-        250
-      ],
-      "vibrateBeforeEnd": [
-        1000
-      ],
-      "vibrateBeforeEndSecs": 300
+      "schedule": [
+        {
+          "name": "Work",
+          "startTime": "02:00",
+          "endTime": "04:30",
+          "habits": [
+            "Check email",
+            "Post update"
+          ],
+          "vibrateOnStart": [
+            500,
+            1000,
+            250
+          ],
+          "vibrateBeforeEnd": [
+            1000
+          ],
+          "vibrateBeforeEndSecs": 300
+        },
+        {
+          "name": "Lunch",
+          "startTime": "12:00",
+          "endTime": "13:00",
+          "habits": [
+            "Eat",
+            "Take a short walk",
+            "Have Fun!"
+          ],
+          "vibrateOnStart": [
+            500,
+            1000
+          ],
+          "vibrateBeforeEnd": [
+            1000
+          ],
+          "vibrateBeforeEndSecs": 300
+        },
+        {
+          "name": "Meetings",
+          "startTime": "16:01",
+          "endTime": "17:25",
+          "habits": [
+            "Attend team meeting",
+            "Review project"
+          ],
+          "vibrateOnStart": [
+            500
+          ],
+          "vibrateBeforeEnd": [
+            1000
+          ],
+          "vibrateBeforeEndSecs": 60
+        },
+        {
+          "name": "Sleep",
+          "startTime": "18:00",
+          "endTime": "01:55",
+          "habits": [
+            "Attend team meeting",
+            "Review project status",
+            "Have Fun!"
+          ],
+          "vibrateOnStart": [
+            500
+          ],
+          "vibrateBeforeEnd": [
+            1000
+          ],
+          "vibrateBeforeEndSecs": 100
+        }
+      ]
     },
     {
-      "name": "Lunch",
-      "startTime": "12:00",
-      "endTime": "13:00",
-      "habits": [
-        "Eat",
-        "Take a short walk","Have Fun!"
+      "days": [
+        "Sat",
+        "Sun"
       ],
-      "vibrateOnStart": [
-        500,
-        1000
-      ],
-      "vibrateBeforeEnd": [
-        1000
-      ],
-      "vibrateBeforeEndSecs": 300
-    },
-    {
-      "name": "Meetings",
-      "startTime": "16:01",
-      "endTime": "17:25",
-      "habits": [
-        "Attend team meeting",
-        "Review project"
-      ],
-      "vibrateOnStart": [
-        500
-      ],
-      "vibrateBeforeEnd": [
-        1000
-      ],
-      "vibrateBeforeEndSecs": 60
-    },
-    {
-      "name": "Sleep",
-      "startTime": "18:00",
-      "endTime": "01:55",
-      "habits": [
-        "Attend team meeting",
-        "Review project status","Have Fun!"
-      ],
-      "vibrateOnStart": [
-        500
-      ],
-      "vibrateBeforeEnd": [
-        1000
-      ],
-      "vibrateBeforeEndSecs": 100
+      "schedule": [
+        {
+          "name": "Work",
+          "startTime": "02:00",
+          "endTime": "04:30",
+          "habits": [
+            "Check email",
+            "Post update"
+          ],
+          "vibrateOnStart": [
+            500,
+            1000,
+            250
+          ],
+          "vibrateBeforeEnd": [
+            1000
+          ],
+          "vibrateBeforeEndSecs": 300
+        },
+        {
+          "name": "Lunch",
+          "startTime": "12:00",
+          "endTime": "13:00",
+          "habits": [
+            "Eat",
+            "Take a short walk",
+            "Have Fun!"
+          ],
+          "vibrateOnStart": [
+            500,
+            1000
+          ],
+          "vibrateBeforeEnd": [
+            1000
+          ],
+          "vibrateBeforeEndSecs": 300
+        },
+        {
+          "name": "Meetings",
+          "startTime": "16:01",
+          "endTime": "17:25",
+          "habits": [
+            "Attend team meeting",
+            "Review project"
+          ],
+          "vibrateOnStart": [
+            500
+          ],
+          "vibrateBeforeEnd": [
+            1000
+          ],
+          "vibrateBeforeEndSecs": 60
+        },
+        {
+          "name": "Sleep",
+          "startTime": "18:00",
+          "endTime": "23:55",
+          "habits": [
+            "Attend team meeting",
+            "Review project status",
+            "Have Fun!"
+          ],
+          "vibrateOnStart": [
+            500
+          ],
+          "vibrateBeforeEnd": [
+            1000
+          ],
+          "vibrateBeforeEndSecs": 100
+        }
+      ]
     }
   ]
 }

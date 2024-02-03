@@ -27,7 +27,7 @@ import androidx.wear.watchface.WatchState
 import androidx.wear.watchface.style.CurrentUserStyleRepository
 import com.google.gson.GsonBuilder
 import com.watchface.android.wearable.alpha.model.InnerScheduleModel
-import com.watchface.android.wearable.alpha.model.ScheduleModel
+import com.watchface.android.wearable.alpha.model.MainSchedule
 import com.watchface.android.wearable.alpha.sharedpreferences.SharedPreferences
 import com.watchface.android.wearable.alpha.utils.TimeDeserializer
 import java.io.InputStream
@@ -74,7 +74,7 @@ class AnalogWatchCanvasRenderer(
     private val sensorManager by lazy { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
     private val stepCounterSensor: Sensor? by lazy { sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) }
     private val heartRateSensor: Sensor? by lazy { sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE) }
-    private lateinit var scheduleModel: ScheduleModel
+    private lateinit var mainSchedule: MainSchedule
     private val nameMap = HashMap<String, Int?>()
     private val vibrator: Vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -103,8 +103,10 @@ class AnalogWatchCanvasRenderer(
             .registerTypeAdapter(LocalTime::class.java, TimeDeserializer())
             .create()
 
-        scheduleModel = gson.fromJson(jsonString, ScheduleModel::class.java)
-        scheduleModel.schedule.sortBy { it.endTime }
+        mainSchedule = gson.fromJson(jsonString, MainSchedule::class.java)
+        for (scheduleModel in mainSchedule.mainSchedule){
+            scheduleModel.schedule.sortBy { it.endTime }
+        }
     }
 
     override suspend fun createSharedAssets(): AnalogSharedAssets {
@@ -180,68 +182,70 @@ class AnalogWatchCanvasRenderer(
         }
 
         if(SharedPreferences.read("schedule", 1) == 1) {
-            if (scheduleModel.days.contains(getCurrentDayShortForm())) {
-                for (i in scheduleModel.schedule) {
-                    if (currentTime.isAfter(i.startTime) && currentTime.isBefore(i.endTime)) {
-                        if(SharedPreferences.read("vibration", 1) == 1) {
-                            if(Duration.between(currentTime,i.endTime).seconds.toInt() == i.vibrateBeforeEndSecs){
-                                if(nameMap[i.name] == 0) {
-                                    nameMap[i.name] = null
-                                    vibrate(i.vibrateBeforeEnd.toLongArray())
+            for(scheduleModel in mainSchedule.mainSchedule){
+                if (scheduleModel.days.contains(getCurrentDayShortForm())) {
+                    for (i in scheduleModel.schedule) {
+                        if (currentTime.isAfter(i.startTime) && currentTime.isBefore(i.endTime)) {
+                            if(SharedPreferences.read("vibration", 1) == 1) {
+                                if(Duration.between(currentTime,i.endTime).seconds.toInt() == i.vibrateBeforeEndSecs){
+                                    if(nameMap[i.name] == 0) {
+                                        nameMap[i.name] = null
+                                        vibrate(i.vibrateBeforeEnd.toLongArray())
+                                    }
+                                }
+
+                                if(Duration.between(i.startTime, currentTime).seconds.toInt() <= 1){
+                                    if(nameMap[i.name] == null) {
+                                        nameMap[i.name] = 0
+                                        vibrate(i.vibrateOnStart.toLongArray())
+                                    }
                                 }
                             }
 
-                            if(Duration.between(i.startTime, currentTime).seconds.toInt() <= 1){
-                                if(nameMap[i.name] == null) {
-                                    nameMap[i.name] = 0
-                                    vibrate(i.vibrateOnStart.toLongArray())
-                                }
-                            }
+                            val time = "${
+                                getDifferenceOfLocalTime(
+                                    i.startTime,
+                                    i.endTime
+                                )
+                            } | ${convertLocalTimeTo24HourFormat(i.startTime)} - ${
+                                convertLocalTimeTo24HourFormat(i.endTime)
+                            }"
+                            drawProgressArc(
+                                canvas,
+                                bounds,
+                                (getLocalTimeDifferenceInMinutes(
+                                    i.startTime,
+                                    currentTime
+                                ) * (60F / getLocalTimeDifferenceInMinutes(
+                                    i.startTime,
+                                    i.endTime
+                                ).toFloat())),
+                                getDifferenceOfLocalTime(i.startTime, currentTime),
+                                getDifferenceOfLocalTime(currentTime, i.endTime),
+                                (getNumberOf15MinIntervalBetweenLocalTime(
+                                    i.startTime,
+                                    i.endTime
+                                ) + 1).toInt(),
+                                primaryColor,
+                                secondaryColor
+                            )
+                            displayCurrentScheduleWithTime(canvas, bounds, i.name, time, primaryColor)
+
+                            drawCurrentScheduleHabits(canvas, i.habits, secondaryColor)
                         }
 
-                        val time = "${
-                            getDifferenceOfLocalTime(
-                                i.startTime,
-                                i.endTime
+                        val nextGreatest = findNextGreatest(currentTime)
+
+                        if (nextGreatest != null) {
+                            drawNextSchedule(
+                                canvas,
+                                nextGreatest.name,
+                                "${convertLocalTimeTo24HourFormat(nextGreatest.startTime)} - ${
+                                    convertLocalTimeTo24HourFormat(nextGreatest.endTime)
+                                }",
+                                primaryColor
                             )
-                        } | ${convertLocalTimeTo24HourFormat(i.startTime)} - ${
-                            convertLocalTimeTo24HourFormat(i.endTime)
-                        }"
-                        drawProgressArc(
-                            canvas,
-                            bounds,
-                            (getLocalTimeDifferenceInMinutes(
-                                i.startTime,
-                                currentTime
-                            ) * (60F / getLocalTimeDifferenceInMinutes(
-                                i.startTime,
-                                i.endTime
-                            ).toFloat())),
-                            getDifferenceOfLocalTime(i.startTime, currentTime),
-                            getDifferenceOfLocalTime(currentTime, i.endTime),
-                            (getNumberOf15MinIntervalBetweenLocalTime(
-                                i.startTime,
-                                i.endTime
-                            ) + 1).toInt(),
-                            primaryColor,
-                            secondaryColor
-                        )
-                        displayCurrentScheduleWithTime(canvas, bounds, i.name, time, primaryColor)
-
-                        drawCurrentScheduleHabits(canvas, i.habits, secondaryColor)
-                    }
-
-                    val nextGreatest = findNextGreatest(currentTime)
-
-                    if (nextGreatest != null) {
-                        drawNextSchedule(
-                            canvas,
-                            nextGreatest.name,
-                            "${convertLocalTimeTo24HourFormat(nextGreatest.startTime)} - ${
-                                convertLocalTimeTo24HourFormat(nextGreatest.endTime)
-                            }",
-                            primaryColor
-                        )
+                        }
                     }
                 }
             }
@@ -256,10 +260,12 @@ class AnalogWatchCanvasRenderer(
     private fun findNextGreatest(currentTime: LocalTime): InnerScheduleModel? {
         var nextGreaterValue: InnerScheduleModel? = null
 
-        for (element in scheduleModel.schedule) {
-            if (element.startTime > currentTime) {
-                nextGreaterValue = element
-                break
+        for(scheduleModel in mainSchedule.mainSchedule){
+            for (element in scheduleModel.schedule) {
+                if (element.startTime > currentTime) {
+                    nextGreaterValue = element
+                    break
+                }
             }
         }
 
@@ -551,7 +557,7 @@ class AnalogWatchCanvasRenderer(
      */
     private fun displayHeartbeatAndLogo(canvas: Canvas, bounds: Rect, heartBeat: String, primaryColor: Int) {
         val heartBeatPaint = getTextPaint(15f, Paint.Align.LEFT, primaryColor)
-        val logoDrawable = getLogoDrawable(R.drawable.heartbeat1) // Replace this with your method to get the logo drawable
+        val logoDrawable = getLogoDrawable(R.drawable.heartbeat) // Replace this with your method to get the logo drawable
         val logoWidth = 20
         val logoHeight = 20
 

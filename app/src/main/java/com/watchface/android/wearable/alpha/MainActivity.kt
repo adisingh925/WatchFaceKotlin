@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.gson.GsonBuilder
 import com.watchface.android.wearable.alpha.adapter.RecyclerAdapter
 import com.watchface.android.wearable.alpha.databinding.ActivityMainBinding
+import com.watchface.android.wearable.alpha.model.MainSchedule
 import com.watchface.android.wearable.alpha.model.ScheduleModel
 import com.watchface.android.wearable.alpha.utils.TimeDeserializer
 import java.io.InputStream
@@ -27,19 +28,23 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         RecyclerAdapter(this, this)
     }
 
-    private lateinit var scheduleModel: ScheduleModel
+    private lateinit var mainSchedule: MainSchedule
+
+    private val daysList = ArrayList<String>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-
 
         initRecyclerView()
     }
 
     private fun initRecyclerView() {
         readAndParseJsonFile()
-        adapter.setData(scheduleModel.days)
+        for (scheduleModel in mainSchedule.mainSchedule){
+            daysList.addAll(scheduleModel.days)
+        }
+        adapter.setData(daysList)
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
     }
@@ -60,8 +65,10 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
             .registerTypeAdapter(LocalTime::class.java, TimeDeserializer())
             .create()
 
-        scheduleModel = gson.fromJson(jsonString, ScheduleModel::class.java)
-        scheduleModel.schedule.sortBy { it.endTime }
+        mainSchedule = gson.fromJson(jsonString, MainSchedule::class.java)
+        for (scheduleModel in mainSchedule.mainSchedule){
+            scheduleModel.schedule.sortBy { it.endTime }
+        }
     }
 
     override fun onItemClick(data: String) {
