@@ -14,7 +14,6 @@ class TimeLine : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
-        binding.timelineView.startTime = 12
 
     }
 }
