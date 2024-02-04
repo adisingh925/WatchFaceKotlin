@@ -24,10 +24,8 @@ class WatchFaceConfigActivity : ComponentActivity() {
         binding.vibrationSwitch.isEnabled = true
         binding.scheduleSwitch.isEnabled = true
 
-        binding.vibrationSwitch.isChecked = SharedPreferences.read("vibration", 0) == 1
-        binding.scheduleSwitch.isChecked = SharedPreferences.read("schedule", 0) == 1
-        binding.primaryColor.setText(SharedPreferences.read("primaryColor", "#d5f7e4"))
-        binding.secondaryColor.setText(SharedPreferences.read("secondaryColor", "#68c4af"))
+        binding.vibrationSwitch.isChecked = SharedPreferences.read("vibration", 1) == 1
+        binding.scheduleSwitch.isChecked = SharedPreferences.read("schedule", 1) == 1
 
         binding.vibrationSwitch.setOnCheckedChangeListener { _, isChecked ->
             if(isChecked) {
@@ -42,18 +40,6 @@ class WatchFaceConfigActivity : ComponentActivity() {
                 SharedPreferences.write("schedule", 1)
             } else {
                 SharedPreferences.write("schedule", 0)
-            }
-        }
-
-        binding.primaryColor.doOnTextChanged { text, _, _, _ ->
-            if(text != null) {
-                SharedPreferences.write("primaryColor", text.toString())
-            }
-        }
-
-        binding.secondaryColor.doOnTextChanged { text, _, _, _ ->
-            if(text != null) {
-                SharedPreferences.write("secondaryColor", text.toString())
             }
         }
     }

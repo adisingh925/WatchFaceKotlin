@@ -59,6 +59,6 @@ class AnalogWatchFaceService : WatchFaceService() {
     }
 
     companion object {
-        const val TAG = "AnalogWatchFaceService"
+        const val TAG = "DigitalWatchFaceService"
     }
 }

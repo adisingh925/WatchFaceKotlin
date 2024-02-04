@@ -35,28 +35,6 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <EditText
-            android:id="@+id/primaryColor"
-            android:layout_width="0dp"
-            android:textColor="@color/white"
-            android:hint="Input primary color"
-            android:textColorHint="@color/gray_white"
-            app:layout_constraintTop_toBottomOf="@id/pre_slider_spacer1"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            android:layout_height="wrap_content"/>
-
-        <EditText
-            android:id="@+id/secondaryColor"
-            android:layout_width="0dp"
-            android:textColor="@color/white"
-            android:hint="Input secondary color"
-            android:textColorHint="@color/gray_white"
-            app:layout_constraintTop_toBottomOf="@id/primaryColor"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            android:layout_height="wrap_content"/>
-
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/schedule_switch"
             android:layout_width="0dp"
@@ -69,7 +47,7 @@
             android:contentDescription="displays or hides the schedule data"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/secondaryColor" />
+            app:layout_constraintTop_toBottomOf="@+id/pre_slider_spacer1" />
 
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/vibration_switch"
