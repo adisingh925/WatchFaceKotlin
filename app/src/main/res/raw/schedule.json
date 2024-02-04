@@ -106,8 +106,8 @@
         },
         {
           "name": "Lunch",
-          "startTime": "12:00",
-          "endTime": "13:00",
+          "startTime": "13:00",
+          "endTime": "15:00",
           "habits": [
             "Eat",
             "Take a short walk",

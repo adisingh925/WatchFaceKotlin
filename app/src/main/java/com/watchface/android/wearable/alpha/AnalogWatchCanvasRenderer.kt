@@ -29,6 +29,7 @@ import com.watchface.android.wearable.alpha.model.InnerScheduleModel
 import com.watchface.android.wearable.alpha.model.MainSchedule
 import com.watchface.android.wearable.alpha.sharedpreferences.SharedPreferences
 import com.watchface.android.wearable.alpha.utils.Constants
+import com.watchface.android.wearable.alpha.utils.JsonParser
 import com.watchface.android.wearable.alpha.utils.TimeDeserializer
 import java.io.InputStream
 import java.text.SimpleDateFormat
@@ -74,7 +75,7 @@ class AnalogWatchCanvasRenderer(
     private val sensorManager by lazy { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
     private val stepCounterSensor: Sensor? by lazy { sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) }
     private val heartRateSensor: Sensor? by lazy { sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE) }
-    private lateinit var mainSchedule: MainSchedule
+    private var mainSchedule: MainSchedule = JsonParser(context).readAndParseJsonFile()
     private val nameMap = HashMap<String, Int?>()
     private val vibrator: Vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -82,34 +83,8 @@ class AnalogWatchCanvasRenderer(
     private var stepCount = 0
 
     init {
-        readAndParseJsonFile()
         sensorManager.registerListener(this, stepCounterSensor, SensorManager.SENSOR_DELAY_NORMAL)
         sensorManager.registerListener(this, heartRateSensor, SensorManager.SENSOR_DELAY_NORMAL)
-    }
-
-    /**
-     * This function will read the json file and parse it
-     */
-    private fun readJsonFile(resourceId: Int): String {
-        val inputStream: InputStream = context.resources.openRawResource(resourceId)
-        val size: Int = inputStream.available()
-        val buffer = ByteArray(size)
-        inputStream.read(buffer)
-        inputStream.close()
-        return String(buffer, Charsets.UTF_8)
-    }
-
-    private fun readAndParseJsonFile() {
-        val jsonString = readJsonFile(R.raw.schedule)
-
-        val gson = GsonBuilder()
-            .registerTypeAdapter(LocalTime::class.java, TimeDeserializer())
-            .create()
-
-        mainSchedule = gson.fromJson(jsonString, MainSchedule::class.java)
-        for (scheduleModel in mainSchedule.mainSchedule) {
-            scheduleModel.schedule.sortBy { it.endTime }
-        }
     }
 
     override suspend fun createSharedAssets(): AnalogSharedAssets {
