@@ -1,19 +1,13 @@
 package com.watchface.android.wearable.alpha
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.gson.GsonBuilder
 import com.watchface.android.wearable.alpha.adapter.RecyclerAdapter
 import com.watchface.android.wearable.alpha.databinding.ActivityMainBinding
 import com.watchface.android.wearable.alpha.model.MainSchedule
-import com.watchface.android.wearable.alpha.model.ScheduleModel
 import com.watchface.android.wearable.alpha.utils.JsonParser
-import com.watchface.android.wearable.alpha.utils.TimeDeserializer
-import java.io.InputStream
-import java.time.LocalTime
 
 class MainActivity : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
 

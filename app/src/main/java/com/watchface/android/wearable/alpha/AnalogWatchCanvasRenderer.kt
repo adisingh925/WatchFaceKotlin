@@ -24,14 +24,11 @@ import androidx.core.content.ContextCompat
 import androidx.wear.watchface.Renderer
 import androidx.wear.watchface.WatchState
 import androidx.wear.watchface.style.CurrentUserStyleRepository
-import com.google.gson.GsonBuilder
 import com.watchface.android.wearable.alpha.model.InnerScheduleModel
 import com.watchface.android.wearable.alpha.model.MainSchedule
 import com.watchface.android.wearable.alpha.sharedpreferences.SharedPreferences
 import com.watchface.android.wearable.alpha.utils.Constants
 import com.watchface.android.wearable.alpha.utils.JsonParser
-import com.watchface.android.wearable.alpha.utils.TimeDeserializer
-import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.time.Duration
 import java.time.LocalDate

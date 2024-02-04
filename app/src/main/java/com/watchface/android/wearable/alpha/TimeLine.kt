@@ -1,17 +1,13 @@
 package com.watchface.android.wearable.alpha
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.google.gson.GsonBuilder
 import com.watchface.android.wearable.alpha.adapter.DayScheduleAdapter
 import com.watchface.android.wearable.alpha.databinding.ActivityTimeLineBinding
 import com.watchface.android.wearable.alpha.model.InnerScheduleModel
 import com.watchface.android.wearable.alpha.model.MainSchedule
 import com.watchface.android.wearable.alpha.utils.JsonParser
-import com.watchface.android.wearable.alpha.utils.TimeDeserializer
-import java.io.InputStream
-import java.time.LocalTime
 
 class TimeLine : AppCompatActivity() {
 

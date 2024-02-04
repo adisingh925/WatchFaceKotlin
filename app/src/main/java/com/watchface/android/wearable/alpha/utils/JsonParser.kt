@@ -26,6 +26,7 @@ class JsonParser(private val context: Context) {
             .create()
 
         val mainSchedule = gson.fromJson(jsonString, MainSchedule::class.java)
+
         for (scheduleModel in mainSchedule.mainSchedule) {
             scheduleModel.schedule.sortBy { it.startTime }
         }

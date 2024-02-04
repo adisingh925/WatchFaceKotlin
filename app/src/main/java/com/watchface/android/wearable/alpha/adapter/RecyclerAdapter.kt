@@ -5,6 +5,9 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.watchface.android.wearable.alpha.databinding.RecyclerViewItemBinding
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 class RecyclerAdapter(private val context: Context, private val onItemClickListener: OnItemClickListener) : RecyclerView.Adapter<RecyclerAdapter.MyViewHolder>() {
 
@@ -30,6 +33,10 @@ class RecyclerAdapter(private val context: Context, private val onItemClickListe
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
+        if(days[position] == getCurrentDayShortForm()){
+            holder.cardView.setCardBackgroundColor(context.resources.getColor(android.R.color.holo_blue_light))
+        }
+
         holder.day.text = days[position]
 
         holder.cardView.setOnClickListener {
@@ -40,5 +47,10 @@ class RecyclerAdapter(private val context: Context, private val onItemClickListe
     fun setData(data: ArrayList<String>){
         days = data
         notifyDataSetChanged()
+    }
+
+    private fun getCurrentDayShortForm(): String {
+        val formatter = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
+        return LocalDate.now().format(formatter)
     }
 }
