@@ -11,10 +11,6 @@ class DayScheduleAdapter : RecyclerView.Adapter<DayScheduleAdapter.MyViewHolder>
     private lateinit var binding: ScheduleItemBinding
     private var daySchedule = ArrayList<InnerScheduleModel>()
 
-    interface OnItemClickListener {
-        fun onItemClick(data: String)
-    }
-
     class MyViewHolder(binding: ScheduleItemBinding) : RecyclerView.ViewHolder(binding.root) {
         val time = binding.time
         val schedule = binding.schedule
@@ -31,7 +27,7 @@ class DayScheduleAdapter : RecyclerView.Adapter<DayScheduleAdapter.MyViewHolder>
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         holder.time.text = daySchedule[position].startTime.toString() + " - " + daySchedule[position].endTime.toString()
-        holder.schedule.text = daySchedule[position].habits.joinToString(separator = ", ")
+        holder.schedule.text = daySchedule[position].name
     }
 
     fun setData(data: ArrayList<InnerScheduleModel>){

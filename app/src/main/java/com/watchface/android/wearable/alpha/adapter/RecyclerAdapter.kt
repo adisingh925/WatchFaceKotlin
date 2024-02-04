@@ -1,6 +1,7 @@
 package com.watchface.android.wearable.alpha.adapter
 
 import android.content.Context
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -34,7 +35,7 @@ class RecyclerAdapter(private val context: Context, private val onItemClickListe
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
         if(days[position] == getCurrentDayShortForm()){
-            holder.cardView.setCardBackgroundColor(context.resources.getColor(android.R.color.holo_blue_light))
+            holder.cardView.setCardBackgroundColor(Color.GREEN)
         }
 
         holder.day.text = days[position]
