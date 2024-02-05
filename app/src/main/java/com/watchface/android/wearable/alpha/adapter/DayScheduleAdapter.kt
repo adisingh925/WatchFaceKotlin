@@ -26,11 +26,11 @@ class DayScheduleAdapter : RecyclerView.Adapter<DayScheduleAdapter.MyViewHolder>
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
-        holder.time.text = daySchedule[position].startTime.toString() + " - " + daySchedule[position].endTime.toString()
-        holder.schedule.text = daySchedule[position].name
+        holder.time.text = daySchedule[position].startTime.toString() + " - " + daySchedule[position].endTime.toString() + " -- " + daySchedule[position].name
+        holder.schedule.text = daySchedule[position].habits.joinToString(", ")
     }
 
-    fun setData(data: ArrayList<InnerScheduleModel>){
+    fun setData(data: ArrayList<InnerScheduleModel>) {
         daySchedule = data
         notifyDataSetChanged()
     }

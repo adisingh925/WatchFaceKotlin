@@ -81,7 +81,7 @@ class AnalogWatchCanvasRenderer(
 
     init {
         sensorManager.registerListener(this, stepCounterSensor, SensorManager.SENSOR_DELAY_NORMAL)
-        sensorManager.registerListener(this, heartRateSensor, SensorManager.SENSOR_DELAY_NORMAL)
+        sensorManager.registerListener(this, heartRateSensor, Constants.HEART_SENSOR_SPEED)
     }
 
     override suspend fun createSharedAssets(): AnalogSharedAssets {
