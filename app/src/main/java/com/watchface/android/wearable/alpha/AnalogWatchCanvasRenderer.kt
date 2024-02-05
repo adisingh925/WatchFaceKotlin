@@ -244,10 +244,12 @@ class AnalogWatchCanvasRenderer(
         var nextGreaterValue: InnerScheduleModel? = null
 
         for (scheduleModel in mainSchedule.mainSchedule) {
-            for (element in scheduleModel.schedule) {
-                if (element.startTime > currentTime) {
-                    nextGreaterValue = element
-                    break
+            if(scheduleModel.days.contains(getCurrentDayShortForm())){
+                for (element in scheduleModel.schedule) {
+                    if (element.startTime > currentTime) {
+                        nextGreaterValue = element
+                        break
+                    }
                 }
             }
         }

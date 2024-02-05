@@ -87,7 +87,7 @@
       ],
       "schedule": [
         {
-          "name": "Work",
+          "name": "sat-sun-0",
           "startTime": "02:00",
           "endTime": "04:30",
           "habits": [
@@ -105,7 +105,7 @@
           "vibrateBeforeEndSecs": 300
         },
         {
-          "name": "Lunch",
+          "name": "sat-sun-1",
           "startTime": "13:00",
           "endTime": "15:00",
           "habits": [
@@ -123,7 +123,7 @@
           "vibrateBeforeEndSecs": 300
         },
         {
-          "name": "Meetings",
+          "name": "sat-sun-2",
           "startTime": "18:01",
           "endTime": "23:25",
           "habits": [
@@ -139,7 +139,7 @@
           "vibrateBeforeEndSecs": 60
         },
         {
-          "name": "Sleep",
+          "name": "sat-sun-3",
           "startTime": "23:30",
           "endTime": "01:55",
           "habits": [
