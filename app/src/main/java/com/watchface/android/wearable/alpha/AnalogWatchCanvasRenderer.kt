@@ -143,7 +143,6 @@ class AnalogWatchCanvasRenderer(
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.BODY_SENSORS)
             == PackageManager.PERMISSION_GRANTED
         ) {
-
             drawNumberOfSteps(canvas, bounds, stepCount.toString(), primaryColor)
             displayHeartbeatAndLogo(canvas, bounds, heartRateValue.toString(), primaryColor)
         } else {
@@ -154,54 +153,85 @@ class AnalogWatchCanvasRenderer(
             for (scheduleModel in mainSchedule.mainSchedule) {
                 if (scheduleModel.days.contains(getCurrentDayShortForm())) {
                     for (i in scheduleModel.schedule) {
-                        if (currentTime.isAfter(i.startTime) && currentTime.isBefore(i.endTime)) {
+                        val startTime = i.startTime
+                        val endTime = i.endTime
+
+                        println(endTime.plusHours(24))
+
+                        val spansOverMidnight = endTime.isBefore(startTime)
+
+                        if ((currentTime.isAfter(startTime) && currentTime.isBefore(endTime)) || (spansOverMidnight && (currentTime.isAfter(startTime) || currentTime.isBefore(endTime)))) {
                             if (SharedPreferences.read("vibration", 1) == 1) {
-                                if (Duration.between(
-                                        currentTime,
-                                        i.endTime
-                                    ).seconds.toInt() == i.vibrateBeforeEndSecs
-                                ) {
-                                    if (nameMap[i.name] == 0) {
-                                        nameMap[i.name] = null
-                                        vibrate(i.vibrateBeforeEnd.toLongArray())
+                                if(!spansOverMidnight){
+                                    if (Duration.between(
+                                            currentTime,
+                                            endTime
+                                        ).seconds.toInt() == i.vibrateBeforeEndSecs
+                                    ) {
+                                        if (nameMap[i.name] == 0) {
+                                            nameMap[i.name] = null
+                                            vibrate(i.vibrateBeforeEnd.toLongArray())
+                                        }
+                                    }
+                                }else{
+                                    val timeDiff = Duration.between(currentTime, endTime).seconds.toInt()
+
+                                    if (timeDiff == i.vibrateBeforeEndSecs
+                                    ) {
+                                        if (nameMap[i.name] == 0) {
+                                            nameMap[i.name] = null
+                                            vibrate(i.vibrateBeforeEnd.toLongArray())
+                                        }
                                     }
                                 }
 
-                                if (Duration.between(
-                                        i.startTime,
-                                        currentTime
-                                    ).seconds.toInt() <= 1
-                                ) {
-                                    if (nameMap[i.name] == null) {
-                                        nameMap[i.name] = 0
-                                        vibrate(i.vibrateOnStart.toLongArray())
+                                if(!spansOverMidnight){
+                                    if (Duration.between(
+                                            startTime,
+                                            currentTime
+                                        ).seconds.toInt() <= 1
+                                    ) {
+                                        if (nameMap[i.name] == null) {
+                                            nameMap[i.name] = 0
+                                            vibrate(i.vibrateOnStart.toLongArray())
+                                        }
+                                    }
+                                }else{
+                                    val timeDiff = Duration.between(startTime, currentTime).seconds.toInt()
+
+                                    if (timeDiff <= 1
+                                    ) {
+                                        if (nameMap[i.name] == null) {
+                                            nameMap[i.name] = 0
+                                            vibrate(i.vibrateOnStart.toLongArray())
+                                        }
                                     }
                                 }
                             }
 
                             val time = "${
                                 getDifferenceOfLocalTime(
-                                    i.startTime,
-                                    i.endTime
+                                    startTime,
+                                    endTime
                                 )
-                            } | ${convertLocalTimeTo24HourFormat(i.startTime)} - ${
-                                convertLocalTimeTo24HourFormat(i.endTime)
+                            } | ${convertLocalTimeTo24HourFormat(startTime)} - ${
+                                convertLocalTimeTo24HourFormat(endTime)
                             }"
                             drawProgressArc(
                                 canvas,
                                 bounds,
                                 (getLocalTimeDifferenceInMinutes(
-                                    i.startTime,
+                                    startTime,
                                     currentTime
                                 ) * (60F / getLocalTimeDifferenceInMinutes(
-                                    i.startTime,
-                                    i.endTime
+                                    startTime,
+                                    endTime
                                 ).toFloat())),
-                                getDifferenceOfLocalTime(i.startTime, currentTime),
-                                getDifferenceOfLocalTime(currentTime, i.endTime),
+                                getDifferenceOfLocalTime(startTime, currentTime),
+                                getDifferenceOfLocalTime(currentTime, endTime),
                                 (getNumberOf15MinIntervalBetweenLocalTime(
-                                    i.startTime,
-                                    i.endTime
+                                    startTime,
+                                    endTime
                                 ) + 1).toInt(),
                                 primaryColor,
                                 secondaryColor
@@ -262,31 +292,62 @@ class AnalogWatchCanvasRenderer(
     }
 
     private fun getNumberOf15MinIntervalBetweenLocalTime(time1: LocalTime, time2: LocalTime): Long {
+        if(time1.isAfter(time2)){
+            return ((1440 - Duration.between(LocalTime.MIDNIGHT, time1).toMinutes()) + Duration.between(LocalTime.MIDNIGHT, time2).toMinutes()) / 15
+        }
+
         return Duration.between(time1, time2).toMinutes() / 15
     }
 
     private fun getLocalTimeDifferenceInMinutes(time1: LocalTime, time2: LocalTime): Long {
+        if(time1.isAfter(time2)) {
+            return (86400 - Duration.between(LocalTime.MIDNIGHT, time1).seconds) + Duration.between(
+                LocalTime.MIDNIGHT,
+                time2
+            ).seconds
+        }
+
         return Duration.between(time1, time2).seconds
     }
 
     private fun getDifferenceOfLocalTime(time1: LocalTime, time2: LocalTime): String {
-        val duration = Duration.between(time1, time2)
+        if(time1.isAfter(time2)){
+            val duration = Duration.ofSeconds((86400 - Duration.between(LocalTime.MIDNIGHT, time1).seconds) + Duration.between(LocalTime.MIDNIGHT, time2).seconds)
 
-        Log.d(TAG, "getDifferenceOfLocalTime() duration: $duration")
+            val hours = duration.toHours()
+            val minutes = duration.toMinutes() % 60
+            val seconds = duration.seconds
 
-        val hours = duration.toHours()
-        val minutes = duration.toMinutes() % 60
-        val seconds = duration.seconds
+            return if (hours != 0L && minutes != 0L) {
+                "${hours}h ${minutes}m"
+            } else if (hours == 0L && minutes != 0L) {
+                "${minutes}m"
+            } else if (hours != 0L) {
+                "${hours}h"
+            } else {
+                "${seconds}s"
+            }
+        }else if(time1.isBefore(time2)) {
+            val duration = Duration.between(time1, time2)
 
-        return if (hours != 0L && minutes != 0L) {
-            "${hours}h ${minutes}m"
-        } else if (hours == 0L && minutes != 0L) {
-            "${minutes}m"
-        } else if (hours != 0L) {
-            "${hours}h"
-        } else {
-            "${seconds}s"
+            Log.d(TAG, "getDifferenceOfLocalTime() duration: $duration")
+
+            val hours = duration.toHours()
+            val minutes = duration.toMinutes() % 60
+            val seconds = duration.seconds
+
+            return if (hours != 0L && minutes != 0L) {
+                "${hours}h ${minutes}m"
+            } else if (hours == 0L && minutes != 0L) {
+                "${minutes}m"
+            } else if (hours != 0L) {
+                "${hours}h"
+            } else {
+                "${seconds}s"
+            }
         }
+
+        return ""
     }
 
     private fun convertLocalTimeTo24HourFormat(time: LocalTime): String {

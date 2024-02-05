@@ -25,7 +25,8 @@
         android:theme="@style/Theme.WatchFace">
         <activity
             android:name=".TimeLine"
-            android:exported="false" />
+            android:exported="false"
+            android:taskAffinity="" />
         <!--
                Set to true if your app is Standalone, that is, it does not require the handheld
                app to run.
