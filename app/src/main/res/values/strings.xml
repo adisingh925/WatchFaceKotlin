@@ -14,7 +14,7 @@
      limitations under the License.
 -->
 <resources>
-    <string name="app_name" translatable="false">WatchFace Alpha (Kotlin)</string>
+    <string name="app_name" translatable="false">Schedule</string>
 
     <string name="analog_watch_face_name" translatable="false">Alex Digital Clock</string>
 
