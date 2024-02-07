@@ -11,21 +11,22 @@
       "schedule": [
         {
           "name": "Work",
-          "startTime": "02:00",
-          "endTime": "04:30",
+          "startTime": "00:13",
+          "endTime": "00:17",
           "habits": [
             "Check email",
             "Post update"
           ],
           "vibrateOnStart": [
+            0,
             500,
             1000,
-            250
+            500
           ],
           "vibrateBeforeEnd": [
-            1000
+            0,2000
           ],
-          "vibrateBeforeEndSecs": 300
+          "vibrateBeforeEndSecs": 60
         },
         {
           "name": "Lunch",
@@ -63,20 +64,20 @@
         },
         {
           "name": "Sleep",
-          "startTime": "18:00",
-          "endTime": "20:35",
+          "startTime": "01:02",
+          "endTime": "01:07",
           "habits": [
             "Attend team meeting",
             "Review project status",
             "Have Fun!"
           ],
           "vibrateOnStart": [
-            500
+            0, 500, 1000, 500
           ],
           "vibrateBeforeEnd": [
-            1000
+            0,1000
           ],
-          "vibrateBeforeEndSecs": 100
+          "vibrateBeforeEndSecs": 60
         }
       ]
     },

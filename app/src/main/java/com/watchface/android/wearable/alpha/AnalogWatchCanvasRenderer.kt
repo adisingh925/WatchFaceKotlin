@@ -166,7 +166,7 @@ class AnalogWatchCanvasRenderer(
                                     if (Duration.between(
                                             currentTime,
                                             endTime
-                                        ).seconds.toInt() == i.vibrateBeforeEndSecs
+                                        ).seconds.toInt() <= i.vibrateBeforeEndSecs
                                     ) {
                                         if (nameMap[i.name] == 0) {
                                             nameMap[i.name] = null
@@ -176,7 +176,7 @@ class AnalogWatchCanvasRenderer(
                                 }else{
                                     val timeDiff = Duration.between(currentTime, endTime).seconds.toInt()
 
-                                    if (timeDiff == i.vibrateBeforeEndSecs
+                                    if (timeDiff <= i.vibrateBeforeEndSecs
                                     ) {
                                         if (nameMap[i.name] == 0) {
                                             nameMap[i.name] = null
