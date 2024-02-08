@@ -33,8 +33,10 @@ import java.text.SimpleDateFormat
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.Date
 import java.util.Locale
 import kotlin.math.cos
@@ -114,7 +116,12 @@ class AnalogWatchCanvasRenderer(
          */
         canvas.drawColor(Color.BLACK)
 
-        val currentTime = LocalTime.now()
+        // Specify the desired timezone, for example "America/New_York"
+        val desiredTimeZone = ZoneId.of(Constants.TIMEZONE)
+
+        // Get the current time in the desired timezone
+        val currentTime = zonedDateTime.withZoneSameInstant(desiredTimeZone).toLocalTime()
+        val currentDate = zonedDateTime.withZoneSameInstant(desiredTimeZone)
 
         // I am setting the primary color in here, if the color is not valid then I will set the default color
         val primaryColor = Color.parseColor(Constants.DEFAULT_PRIMARY_COLOR)
@@ -125,16 +132,12 @@ class AnalogWatchCanvasRenderer(
         /**
          * displaying time in 24h format in the canvas
          */
-        drawTimeIn24HourFormat(canvas, bounds, primaryColor)
+        drawTimeIn24HourFormat(canvas, bounds, primaryColor, currentTime)
 
         /**
          * displaying the day of week, date and the month in the canvas
          */
-        drawDate(canvas, bounds, primaryColor)
-
-        /**
-         * display the heartbeat and the logo in the canvas
-         */
+        drawDate(canvas, bounds, primaryColor, currentDate)
 
         /**
          * check if the permission is granted or not
@@ -151,12 +154,10 @@ class AnalogWatchCanvasRenderer(
 
         if (SharedPreferences.read("schedule", 1) == 1) {
             for (scheduleModel in mainSchedule.mainSchedule) {
-                if (scheduleModel.days.contains(getCurrentDayShortForm())) {
+                if (scheduleModel.days.contains(getCurrentDayShortForm(currentDate))) {
                     for (i in scheduleModel.schedule) {
                         val startTime = i.startTime
                         val endTime = i.endTime
-
-                        println(endTime.plusHours(24))
 
                         val spansOverMidnight = endTime.isBefore(startTime)
 
@@ -247,7 +248,7 @@ class AnalogWatchCanvasRenderer(
                             drawCurrentScheduleHabits(canvas, i.habits, secondaryColor)
                         }
 
-                        val nextGreatest = findNextGreatest(currentTime)
+                        val nextGreatest = findNextGreatest(currentTime, currentDate)
 
                         if (nextGreatest != null) {
                             drawNextSchedule(
@@ -270,11 +271,11 @@ class AnalogWatchCanvasRenderer(
         drawBatteryPercentage(canvas, bounds, getWatchBatteryLevel(context), primaryColor)
     }
 
-    private fun findNextGreatest(currentTime: LocalTime): InnerScheduleModel? {
+    private fun findNextGreatest(currentTime: LocalTime, currentDateTime: ZonedDateTime): InnerScheduleModel? {
         var nextGreaterValue: InnerScheduleModel? = null
 
         for (scheduleModel in mainSchedule.mainSchedule) {
-            if(scheduleModel.days.contains(getCurrentDayShortForm())){
+            if(scheduleModel.days.contains(getCurrentDayShortForm(currentDateTime))){
                 for (element in scheduleModel.schedule) {
                     if (element.startTime > currentTime) {
                         nextGreaterValue = element
@@ -355,9 +356,9 @@ class AnalogWatchCanvasRenderer(
         return time.format(formatter)
     }
 
-    private fun getCurrentDayShortForm(): String {
+    private fun getCurrentDayShortForm(currentDateTime: ZonedDateTime): String {
         val formatter = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
-        return LocalDate.now().format(formatter)
+        return currentDateTime.format(formatter)
     }
 
     private fun getTextPaint(fontSize: Float, alignment: Paint.Align, textColor: Int): Paint {
@@ -659,8 +660,9 @@ class AnalogWatchCanvasRenderer(
         return ContextCompat.getDrawable(context, itemName)!!
     }
 
-    private fun drawDate(canvas: Canvas, bounds: Rect, primaryColor: Int) {
-        val text = SimpleDateFormat("E d MMM", Locale.getDefault()).format(Date())
+    private fun drawDate(canvas: Canvas, bounds: Rect, primaryColor: Int, currentTime: ZonedDateTime) {
+        val formatter = DateTimeFormatter.ofPattern("E d MMM")
+        val text = currentTime.format(formatter)
         val datePaint = getTextPaint(20f, Paint.Align.CENTER, primaryColor)
         val centerYDate = bounds.exactCenterY() + 30
         canvas.drawText(text, bounds.exactCenterX(), centerYDate, datePaint)
@@ -669,8 +671,9 @@ class AnalogWatchCanvasRenderer(
     /**
      * This function will draw the time in 24h format in the canvas
      */
-    private fun drawTimeIn24HourFormat(canvas: Canvas, bounds: Rect, primaryColor: Int) {
-        val text = convertMillisTo24HourFormat(System.currentTimeMillis())
+    private fun drawTimeIn24HourFormat(canvas: Canvas, bounds: Rect, primaryColor: Int, currentTime: LocalTime) {
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+        val text = currentTime.format(formatter)
         val timePaint = getTextPaint(80f, Paint.Align.CENTER, primaryColor)
         canvas.drawText(text, bounds.exactCenterX(), bounds.exactCenterY(), timePaint)
     }
