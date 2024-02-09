@@ -8,6 +8,10 @@ import com.watchface.android.wearable.alpha.databinding.ActivityTimeLineBinding
 import com.watchface.android.wearable.alpha.model.InnerScheduleModel
 import com.watchface.android.wearable.alpha.model.MainSchedule
 import com.watchface.android.wearable.alpha.utils.JsonParser
+import java.text.SimpleDateFormat
+import java.time.LocalTime
+import java.util.Calendar
+import java.util.Locale
 
 class TimeLine : AppCompatActivity() {
 
@@ -45,10 +49,36 @@ class TimeLine : AppCompatActivity() {
             if(scheduleModel.days.contains(day)){
                 daySchedule.addAll(scheduleModel.schedule)
             }
+
+            if(scheduleModel.days.contains(intent.getStringExtra("day")
+                    ?.let { getNextDayOfWeekShortForm(it) })){
+                for(innerScheduleModel in scheduleModel.schedule){
+                    if(innerScheduleModel.startTime <= LocalTime.of(3,0,0)){
+                        daySchedule.add(innerScheduleModel)
+                    }
+                }
+            }
         }
 
         adapter.setData(daySchedule)
         recyclerView.adapter = adapter
         recyclerView.layoutManager = LinearLayoutManager(this)
+    }
+
+    fun getNextDayOfWeekShortForm(currentDayShortForm: String): String {
+        val dateFormat = SimpleDateFormat("EEE", Locale.getDefault())
+        val calendar = Calendar.getInstance()
+        val currentDate = dateFormat.parse(currentDayShortForm)
+
+        // Set the calendar to the given day of the week
+        if (currentDate != null) {
+            calendar.time = currentDate
+        }
+
+        // Add one day to get the next day of the week
+        calendar.add(Calendar.DAY_OF_WEEK, 1)
+
+        // Get the short form of the next day of the week
+        return dateFormat.format(calendar.time)
     }
 }
