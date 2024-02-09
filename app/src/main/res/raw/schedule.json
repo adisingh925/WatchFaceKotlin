@@ -83,53 +83,15 @@
     },
     {
       "days": [
-        "Sat",
-        "Sun"
+        "Sat"
       ],
       "schedule": [
         {
-          "name": "sat-sun-0",
-          "startTime": "02:00",
-          "endTime": "04:30",
+          "name": "sat-sun-3",
+          "startTime": "06:00",
+          "endTime": "08:55",
           "habits": [
-            "Check email",
-            "Post update"
-          ],
-          "vibrateOnStart": [
-            500,
-            1000,
-            250
-          ],
-          "vibrateBeforeEnd": [
-            1000
-          ],
-          "vibrateBeforeEndSecs": 300
-        },
-        {
-          "name": "sat-sun-1",
-          "startTime": "13:00",
-          "endTime": "15:00",
-          "habits": [
-            "Eat",
-            "Take a short walk",
-            "Have Fun!"
-          ],
-          "vibrateOnStart": [
-            500,
-            1000
-          ],
-          "vibrateBeforeEnd": [
-            1000
-          ],
-          "vibrateBeforeEndSecs": 300
-        },
-        {
-          "name": "sat-sun-2",
-          "startTime": "18:01",
-          "endTime": "23:25",
-          "habits": [
-            "Attend team meeting",
-            "Review project"
+            "Attend team meeting"
           ],
           "vibrateOnStart": [
             500
@@ -137,12 +99,19 @@
           "vibrateBeforeEnd": [
             1000
           ],
-          "vibrateBeforeEndSecs": 60
-        },
+          "vibrateBeforeEndSecs": 100
+        }
+      ]
+    },
+    {
+      "days": [
+        "Sun"
+      ],
+      "schedule": [
         {
-          "name": "sat-sun-3",
-          "startTime": "23:30",
-          "endTime": "01:55",
+          "name": "sat-sun-abc",
+          "startTime": "01:00",
+          "endTime": "03:55",
           "habits": [
             "Attend team meeting"
           ],

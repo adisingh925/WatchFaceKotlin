@@ -37,6 +37,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import kotlin.math.cos
@@ -129,6 +130,11 @@ class AnalogWatchCanvasRenderer(
         // I am setting the secondary color in here, if the color is not valid then I will set the default color
         val secondaryColor = Color.parseColor(Constants.DEFAULT_SECONDARY_COLOR)
 
+        if(SharedPreferences.read("currentDay","") != getCurrentDayShortForm(currentDate)){
+            SharedPreferences.write("currentDaySteps", stepCount)
+            SharedPreferences.write("currentDay", getCurrentDayShortForm(currentDate))
+        }
+
         /**
          * displaying time in 24h format in the canvas
          */
@@ -146,7 +152,7 @@ class AnalogWatchCanvasRenderer(
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.BODY_SENSORS)
             == PackageManager.PERMISSION_GRANTED
         ) {
-            drawNumberOfSteps(canvas, bounds, stepCount.toString(), primaryColor)
+            drawNumberOfSteps(canvas, bounds, (stepCount - SharedPreferences.read("currentDaySteps",0)).toString(), primaryColor)
             displayHeartbeatAndLogo(canvas, bounds, heartRateValue.toString(), primaryColor)
         } else {
             Log.d(TAG, "Permission not granted")
@@ -273,11 +279,24 @@ class AnalogWatchCanvasRenderer(
 
     private fun findNextGreatest(currentTime: LocalTime, currentDateTime: ZonedDateTime): InnerScheduleModel? {
         var nextGreaterValue: InnerScheduleModel? = null
+        var temp = 0
 
         for (scheduleModel in mainSchedule.mainSchedule) {
             if(scheduleModel.days.contains(getCurrentDayShortForm(currentDateTime))){
                 for (element in scheduleModel.schedule) {
                     if (element.startTime > currentTime) {
+                        temp++
+                        nextGreaterValue = element
+                        break
+                    }
+                }
+            }
+        }
+
+        if(temp == 0){
+            for (scheduleModel in mainSchedule.mainSchedule) {
+                if(scheduleModel.days.contains(getNextDay())){
+                    for (element in scheduleModel.schedule) {
                         nextGreaterValue = element
                         break
                     }
@@ -286,6 +305,13 @@ class AnalogWatchCanvasRenderer(
         }
 
         return nextGreaterValue
+    }
+
+    private fun getNextDay(): String {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_YEAR, 1)
+        val dateFormat = SimpleDateFormat("EEE", Locale.getDefault())
+        return dateFormat.format(calendar.time)
     }
 
     private fun vibrate(pattern: LongArray) {
