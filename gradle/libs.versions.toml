@@ -8,8 +8,10 @@ androidx-wear-tiles = "1.1.0"
 androidx-wear-watchface = "1.2.1"
 compose = "1.5.0-beta01"
 concurrent-futures-ktx = "1.1.0"
+connectClient = "1.1.0-alpha07"
 gson = "2.10.1"
 health-services-client = "1.0.0-rc01"
+healthServices = "4.0.0-alpha03"
 hilt-android = "2.50"
 hilt-work = "1.1.0"
 horologistVersion = "0.1.8"
@@ -29,8 +31,10 @@ android-lint-gradle = "com.android.tools.lint:lint-gradle:31.2.2"
 android-material = "com.google.android.material:material:1.11.0"
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "androidx-activity" }
 androidx-concurrent-futures-ktx = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "concurrent-futures-ktx" }
+androidx-connect-client = { module = "androidx.health.connect:connect-client", version.ref = "connectClient" }
 androidx-core-ktx = "androidx.core:core-ktx:1.12.0"
 androidx-databinding-viewbinding = "androidx.databinding:viewbinding:8.2.2"
+androidx-health-services = { module = "androidx.health:health-services", version.ref = "healthServices" }
 androidx-health-services-client = { module = "androidx.health:health-services-client", version.ref = "health-services-client" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hilt-work" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hilt-work" }

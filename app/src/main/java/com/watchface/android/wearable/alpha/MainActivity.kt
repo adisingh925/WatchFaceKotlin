@@ -1,13 +1,25 @@
 package com.watchface.android.wearable.alpha
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.fitness.Fitness
+import com.google.android.gms.fitness.FitnessOptions
+import com.google.android.gms.fitness.data.DataType
+import com.google.android.gms.fitness.request.DataReadRequest
+import com.watchface.android.wearable.alpha.AnalogWatchFaceService.Companion.TAG
 import com.watchface.android.wearable.alpha.adapter.RecyclerAdapter
 import com.watchface.android.wearable.alpha.databinding.ActivityMainBinding
 import com.watchface.android.wearable.alpha.model.MainSchedule
 import com.watchface.android.wearable.alpha.utils.JsonParser
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
 

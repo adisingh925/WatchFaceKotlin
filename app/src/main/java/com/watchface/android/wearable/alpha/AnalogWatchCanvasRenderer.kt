@@ -18,6 +18,8 @@ import android.hardware.SensorManager
 import android.os.BatteryManager
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.support.wearable.complications.ComplicationData
+import android.support.wearable.complications.ComplicationText
 import android.util.Log
 import android.view.SurfaceHolder
 import androidx.core.content.ContextCompat
@@ -175,6 +177,8 @@ class AnalogWatchCanvasRenderer(
                                             endTime
                                         ).seconds.toInt() <= i.vibrateBeforeEndSecs
                                     ) {
+                                        Log.d(TAG, "vibrating end")
+
                                         if (nameMap[i.name] == 0) {
                                             nameMap[i.name] = null
                                             vibrate(i.vibrateBeforeEnd.toLongArray())
@@ -198,6 +202,9 @@ class AnalogWatchCanvasRenderer(
                                             currentTime
                                         ).seconds.toInt() <= 1
                                     ) {
+
+                                        Log.d(TAG, "vibrating start")
+
                                         if (nameMap[i.name] == null) {
                                             nameMap[i.name] = 0
                                             vibrate(i.vibrateOnStart.toLongArray())
@@ -356,8 +363,6 @@ class AnalogWatchCanvasRenderer(
             }
         }else if(time1.isBefore(time2)) {
             val duration = Duration.between(time1, time2)
-
-            Log.d(TAG, "getDifferenceOfLocalTime() duration: $duration")
 
             val hours = duration.toHours()
             val minutes = duration.toMinutes() % 60
@@ -721,11 +726,11 @@ class AnalogWatchCanvasRenderer(
      * This function will be called when the sensor value is changed
      */
     override fun onSensorChanged(event: SensorEvent?) {
-        Log.d(TAG, "onSensorChanged()")
         if (event!!.sensor.type == Sensor.TYPE_HEART_RATE) {
             heartRateValue = event.values[0].toInt()
         } else if (event.sensor.type == Sensor.TYPE_STEP_COUNTER) {
             stepCount = event.values[0].toInt()
+            Log.d(TAG, "Step Count: $event.")
         }
     }
 

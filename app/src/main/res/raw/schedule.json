@@ -87,19 +87,49 @@
       ],
       "schedule": [
         {
-          "name": "sat-sun-3",
-          "startTime": "06:00",
-          "endTime": "08:55",
+          "name": "sat-1",
+          "startTime": "23:16",
+          "endTime": "23:18",
           "habits": [
             "Attend team meeting"
           ],
           "vibrateOnStart": [
-            500
+            0,1000,250,5000
           ],
           "vibrateBeforeEnd": [
-            1000
+            0,1000,250,1000,250,1000
           ],
-          "vibrateBeforeEndSecs": 100
+          "vibrateBeforeEndSecs": 60
+        },
+        {
+          "name": "sat-2",
+          "startTime": "23:18",
+          "endTime": "23:20",
+          "habits": [
+            "Attend team meeting"
+          ],
+          "vibrateOnStart": [
+            0,1000,250,5000
+          ],
+          "vibrateBeforeEnd": [
+            0,1000,250,1000,250,1000
+          ],
+          "vibrateBeforeEndSecs": 60
+        },
+        {
+          "name": "sat-3",
+          "startTime": "23:20",
+          "endTime": "23:22",
+          "habits": [
+            "Attend team meeting"
+          ],
+          "vibrateOnStart": [
+            0,1000,250,5000
+          ],
+          "vibrateBeforeEnd": [
+            0,1000,250,1000,250,1000
+          ],
+          "vibrateBeforeEndSecs": 60
         }
       ]
     },
