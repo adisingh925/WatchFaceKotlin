@@ -88,7 +88,6 @@ class AnalogWatchCanvasRenderer(
     init {
         sensorManager.registerListener(this, stepCounterSensor, SensorManager.SENSOR_DELAY_NORMAL)
         sensorManager.registerListener(this, heartRateSensor, Constants.HEART_SENSOR_SPEED)
-//        readData()
     }
 
     private val fitnessOptions = FitnessOptions.builder()
@@ -117,6 +116,7 @@ class AnalogWatchCanvasRenderer(
     override suspend fun createSharedAssets(): AnalogSharedAssets {
         return AnalogSharedAssets()
     }
+
     override fun onDestroy() {
         Log.d(TAG, "onDestroy()")
         scope.cancel("DigitalWatchCanvasRenderer scope clear() request")

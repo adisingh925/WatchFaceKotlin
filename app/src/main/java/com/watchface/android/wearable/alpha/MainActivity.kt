@@ -59,7 +59,6 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         setContentView(binding.root)
 
         initRecyclerView()
-//        checkHealthConnectAvailability("com.google.android.apps.healthdata")
         checkPermissionsAndRun(FitActionRequestCode.SUBSCRIBE)
     }
 
@@ -163,27 +162,5 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         val intent = Intent(this, TimeLine::class.java)
         intent.putExtra("day", data)
         startActivity(intent)
-    }
-
-    fun checkHealthConnectAvailability(providerPackageName : String){
-        val availabilityStatus = HealthConnectClient.getSdkStatus(this, providerPackageName)
-        if (availabilityStatus == HealthConnectClient.SDK_UNAVAILABLE) {
-            return // early return as there is no viable integration
-        }
-        if (availabilityStatus == HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED) {
-            // Optionally redirect to package installer to find a provider, for example:
-            val uriString = "market://details?id=$providerPackageName&url=healthconnect%3A%2F%2Fonboarding"
-            this.startActivity(
-                Intent(Intent.ACTION_VIEW).apply {
-                    setPackage("com.android.vending")
-                    data = Uri.parse(uriString)
-                    putExtra("overlay", true)
-                    putExtra("callerId", this.`package`)
-                }
-            )
-            return
-        }
-        val healthConnectClient = HealthConnectClient.getOrCreate(this)
-        Log.d("HealthConnectClient", "HealthConnectClient is available")
     }
 }
