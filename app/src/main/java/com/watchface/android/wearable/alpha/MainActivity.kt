@@ -57,7 +57,6 @@ class MainActivity : AppCompatActivity(), RecyclerAdapter.OnItemClickListener {
         setContentView(binding.root)
 
         initRecyclerView()
-
         checkPermissionsAndRun(FitActionRequestCode.SUBSCRIBE)
     }
 

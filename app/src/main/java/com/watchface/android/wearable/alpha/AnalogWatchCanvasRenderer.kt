@@ -24,6 +24,11 @@ import androidx.core.content.ContextCompat
 import androidx.wear.watchface.Renderer
 import androidx.wear.watchface.WatchState
 import androidx.wear.watchface.style.CurrentUserStyleRepository
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.fitness.Fitness
+import com.google.android.gms.fitness.FitnessOptions
+import com.google.android.gms.fitness.data.DataType
+import com.google.android.gms.fitness.data.Field
 import com.watchface.android.wearable.alpha.model.InnerScheduleModel
 import com.watchface.android.wearable.alpha.model.MainSchedule
 import com.watchface.android.wearable.alpha.sharedpreferences.SharedPreferences
@@ -83,6 +88,30 @@ class AnalogWatchCanvasRenderer(
     init {
         sensorManager.registerListener(this, stepCounterSensor, SensorManager.SENSOR_DELAY_NORMAL)
         sensorManager.registerListener(this, heartRateSensor, Constants.HEART_SENSOR_SPEED)
+        readData()
+    }
+
+    private val fitnessOptions = FitnessOptions.builder()
+        .addDataType(DataType.TYPE_STEP_COUNT_CUMULATIVE)
+        .addDataType(DataType.TYPE_STEP_COUNT_DELTA)
+        .build()
+
+    private fun getGoogleAccount() = GoogleSignIn.getAccountForExtension(context, fitnessOptions)
+
+    private fun readData() {
+        Fitness.getHistoryClient(context, getGoogleAccount())
+            .readDailyTotal(DataType.TYPE_STEP_COUNT_DELTA)
+            .addOnSuccessListener { dataSet ->
+                val total = when {
+                    dataSet.isEmpty -> 0
+                    else -> dataSet.dataPoints.first().getValue(Field.FIELD_STEPS).asInt()
+                }
+                stepCount = total
+                Log.i(AnalogWatchFaceService.TAG, "Total steps: $total")
+            }
+            .addOnFailureListener { e ->
+                Log.w(AnalogWatchFaceService.TAG, "There was a problem getting the step count.", e)
+            }
     }
 
     override suspend fun createSharedAssets(): AnalogSharedAssets {
@@ -110,6 +139,8 @@ class AnalogWatchCanvasRenderer(
         zonedDateTime: ZonedDateTime,
         sharedAssets: AnalogSharedAssets
     ) {
+
+        readData()
         /**
          * This will clear the canvas with the background color
          */
@@ -145,7 +176,8 @@ class AnalogWatchCanvasRenderer(
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.BODY_SENSORS)
             == PackageManager.PERMISSION_GRANTED
         ) {
-            drawNumberOfSteps(canvas, bounds, (stepCount - SharedPreferences.read("currentDaySteps",0)).toString(), primaryColor)
+//            drawNumberOfSteps(canvas, bounds, (stepCount - SharedPreferences.read("currentDaySteps",0)).toString(), primaryColor)
+            drawNumberOfSteps(canvas, bounds, stepCount.toString(), primaryColor)
             displayHeartbeatAndLogo(canvas, bounds, heartRateValue.toString(), primaryColor)
         } else {
             Log.d(TAG, "Permission not granted")
@@ -719,18 +751,19 @@ class AnalogWatchCanvasRenderer(
     override fun onSensorChanged(event: SensorEvent?) {
         if (event!!.sensor.type == Sensor.TYPE_HEART_RATE) {
             heartRateValue = event.values[0].toInt()
-        } else if (event.sensor.type == Sensor.TYPE_STEP_COUNTER) {
-            Log.d(TAG, "onSensorChanged()")
-            stepCount = event.values[0].toInt()
-
-            // Get the current time in the desired timezone
-            val currentDate = ZonedDateTime.now(ZoneId.of(Constants.TIMEZONE))
-
-            if(SharedPreferences.read("currentDay","") != getCurrentDayShortForm(currentDate)){
-                SharedPreferences.write("currentDaySteps", stepCount)
-                SharedPreferences.write("currentDay", getCurrentDayShortForm(currentDate))
-            }
         }
+//        else if (event.sensor.type == Sensor.TYPE_STEP_COUNTER) {
+//            Log.d(TAG, "onSensorChanged()")
+//            stepCount = event.values[0].toInt()
+//
+//            // Get the current time in the desired timezone
+//            val currentDate = ZonedDateTime.now(ZoneId.of(Constants.TIMEZONE))
+//
+//            if(SharedPreferences.read("currentDay","") != getCurrentDayShortForm(currentDate)){
+//                SharedPreferences.write("currentDaySteps", stepCount)
+//                SharedPreferences.write("currentDay", getCurrentDayShortForm(currentDate))
+//            }
+//        }
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
