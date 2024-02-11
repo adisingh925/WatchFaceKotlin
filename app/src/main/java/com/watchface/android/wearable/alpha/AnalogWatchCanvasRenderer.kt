@@ -18,8 +18,6 @@ import android.hardware.SensorManager
 import android.os.BatteryManager
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.support.wearable.complications.ComplicationData
-import android.support.wearable.complications.ComplicationText
 import android.util.Log
 import android.view.SurfaceHolder
 import androidx.core.content.ContextCompat
@@ -33,12 +31,10 @@ import com.watchface.android.wearable.alpha.utils.Constants
 import com.watchface.android.wearable.alpha.utils.JsonParser
 import java.text.SimpleDateFormat
 import java.time.Duration
-import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.time.format.TextStyle
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -131,11 +127,6 @@ class AnalogWatchCanvasRenderer(
 
         // I am setting the secondary color in here, if the color is not valid then I will set the default color
         val secondaryColor = Color.parseColor(Constants.DEFAULT_SECONDARY_COLOR)
-
-        if(SharedPreferences.read("currentDay","") != getCurrentDayShortForm(currentDate)){
-            SharedPreferences.write("currentDaySteps", stepCount)
-            SharedPreferences.write("currentDay", getCurrentDayShortForm(currentDate))
-        }
 
         /**
          * displaying time in 24h format in the canvas
@@ -729,8 +720,16 @@ class AnalogWatchCanvasRenderer(
         if (event!!.sensor.type == Sensor.TYPE_HEART_RATE) {
             heartRateValue = event.values[0].toInt()
         } else if (event.sensor.type == Sensor.TYPE_STEP_COUNTER) {
+            Log.d(TAG, "onSensorChanged()")
             stepCount = event.values[0].toInt()
-            Log.d(TAG, "Step Count: $event.")
+
+            // Get the current time in the desired timezone
+            val currentDate = ZonedDateTime.now(ZoneId.of(Constants.TIMEZONE))
+
+            if(SharedPreferences.read("currentDay","") != getCurrentDayShortForm(currentDate)){
+                SharedPreferences.write("currentDaySteps", stepCount)
+                SharedPreferences.write("currentDay", getCurrentDayShortForm(currentDate))
+            }
         }
     }
 
