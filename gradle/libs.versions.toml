@@ -1,6 +1,7 @@
 [versions]
 android-gradle-plugin = "8.2.2"
 androidx-activity = "1.8.2"
+androidx-connectClient = "1.1.0-alpha02"
 androidx-lifecycle = "2.7.0"
 androidx-test = "1.4.0"
 androidx-wear-compose = "1.1.0-rc01"
@@ -32,6 +33,7 @@ android-material = "com.google.android.material:material:1.11.0"
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "androidx-activity" }
 androidx-concurrent-futures-ktx = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "concurrent-futures-ktx" }
 androidx-connect-client = { module = "androidx.health.connect:connect-client", version.ref = "connectClient" }
+androidx-connect-client-v110alpha02 = { module = "androidx.health.connect:connect-client", version.ref = "androidx-connectClient" }
 androidx-core-ktx = "androidx.core:core-ktx:1.12.0"
 androidx-databinding-viewbinding = "androidx.databinding:viewbinding:8.2.2"
 androidx-health-services = { module = "androidx.health:health-services", version.ref = "healthServices" }
