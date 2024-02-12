@@ -2,12 +2,11 @@
     class="androidx.wear.watchface.complications.rendering.ComplicationDrawable"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     app:borderColor="@color/transparent"
+    app:iconColor="@color/white"
+    app:textColor="#d5f7e4"
     app:titleTypeface="sans-serif-condensed">
     <active
-        app:textColor="@color/white"
-        app:iconColor="@color/white"
-        app:textSize="5sp"/>
+        app:iconColor="@color/white"/>
     <ambient
-        app:textColor="@color/white"
-        app:textSize="5sp"/>
+        app:iconColor="@color/white"/>
 </drawable>

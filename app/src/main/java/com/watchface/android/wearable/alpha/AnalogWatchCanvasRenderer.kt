@@ -85,7 +85,6 @@ class AnalogWatchCanvasRenderer(
     private val vibrator: Vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var heartRateValue = 0
-    private var stepCount = 0
 
     init {
         sensorManager.registerListener(this, stepCounterSensor, SensorManager.SENSOR_DELAY_NORMAL)
@@ -171,7 +170,6 @@ class AnalogWatchCanvasRenderer(
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.BODY_SENSORS)
             == PackageManager.PERMISSION_GRANTED
         ) {
-//            drawNumberOfSteps(canvas, bounds, (stepCount - SharedPreferences.read("currentDaySteps",0)).toString(), primaryColor)
             displayHeartbeatAndLogo(canvas, bounds, heartRateValue.toString(), primaryColor)
         } else {
             Log.d(TAG, "Permission not granted")
@@ -746,18 +744,6 @@ class AnalogWatchCanvasRenderer(
         if (event!!.sensor.type == Sensor.TYPE_HEART_RATE) {
             heartRateValue = event.values[0].toInt()
         }
-//        else if (event.sensor.type == Sensor.TYPE_STEP_COUNTER) {
-//            Log.d(TAG, "onSensorChanged()")
-//            stepCount = event.values[0].toInt()
-//
-//            // Get the current time in the desired timezone
-//            val currentDate = ZonedDateTime.now(ZoneId.of(Constants.TIMEZONE))
-//
-//            if(SharedPreferences.read("currentDay","") != getCurrentDayShortForm(currentDate)){
-//                SharedPreferences.write("currentDaySteps", stepCount)
-//                SharedPreferences.write("currentDay", getCurrentDayShortForm(currentDate))
-//            }
-//        }
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {

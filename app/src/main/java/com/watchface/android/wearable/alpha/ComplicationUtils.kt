@@ -34,9 +34,9 @@ private val DEFAULT_COMPLICATION_STYLE_DRAWABLE_ID = R.drawable.complication_red
 // to select their complication data provider requires numbers to be >= 0.
 internal const val LEFT_COMPLICATION_ID = 100
 
-private const val LEFT_AND_RIGHT_COMPLICATIONS_TOP_BOUND = 0.4f
-private const val LEFT_AND_RIGHT_COMPLICATIONS_BOTTOM_BOUND = 0.6f
-private const val LEFT_COMPLICATION_LEFT_BOUND = 0.7f
+private const val LEFT_AND_RIGHT_COMPLICATIONS_TOP_BOUND = 0.43f
+private const val LEFT_AND_RIGHT_COMPLICATIONS_BOTTOM_BOUND = 0.5f
+private const val LEFT_COMPLICATION_LEFT_BOUND = 0.79f
 private const val LEFT_COMPLICATION_RIGHT_BOUND = 1f
 
 /**
