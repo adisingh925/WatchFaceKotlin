@@ -3,6 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     app:borderColor="@color/transparent"
     app:iconColor="@color/white"
+    app:highlightColor="@color/white"
+    app:textSize="8sp"
     app:textColor="#d5f7e4"
     app:titleTypeface="sans-serif-condensed">
     <active

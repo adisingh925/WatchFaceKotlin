@@ -17,6 +17,7 @@ package com.watchface.android.wearable.alpha
 
 import android.content.Context
 import android.graphics.RectF
+import android.graphics.drawable.Icon
 import androidx.wear.watchface.CanvasComplicationFactory
 import androidx.wear.watchface.ComplicationSlot
 import androidx.wear.watchface.ComplicationSlotsManager
@@ -24,6 +25,9 @@ import androidx.wear.watchface.complications.ComplicationSlotBounds
 import androidx.wear.watchface.complications.DefaultComplicationDataSourcePolicy
 import androidx.wear.watchface.complications.SystemDataSources
 import androidx.wear.watchface.complications.data.ComplicationType
+import androidx.wear.watchface.complications.data.MonochromaticImage
+import androidx.wear.watchface.complications.data.PlainComplicationText
+import androidx.wear.watchface.complications.data.ShortTextComplicationData
 import androidx.wear.watchface.complications.rendering.CanvasComplicationDrawable
 import androidx.wear.watchface.complications.rendering.ComplicationDrawable
 import androidx.wear.watchface.style.CurrentUserStyleRepository
@@ -34,9 +38,9 @@ private val DEFAULT_COMPLICATION_STYLE_DRAWABLE_ID = R.drawable.complication_red
 // to select their complication data provider requires numbers to be >= 0.
 internal const val LEFT_COMPLICATION_ID = 100
 
-private const val LEFT_AND_RIGHT_COMPLICATIONS_TOP_BOUND = 0.43f
-private const val LEFT_AND_RIGHT_COMPLICATIONS_BOTTOM_BOUND = 0.5f
-private const val LEFT_COMPLICATION_LEFT_BOUND = 0.79f
+private const val LEFT_AND_RIGHT_COMPLICATIONS_TOP_BOUND = 0.42f
+private const val LEFT_AND_RIGHT_COMPLICATIONS_BOTTOM_BOUND = 0.52f
+private const val LEFT_COMPLICATION_LEFT_BOUND = 0.77f
 private const val LEFT_COMPLICATION_RIGHT_BOUND = 1f
 
 /**

@@ -607,7 +607,7 @@ class AnalogWatchCanvasRenderer(
 
         logoDrawable.draw(canvas)
 
-        val additionalTextX = logoLeft + logoWidth + 5f // Adjust the horizontal position
+        val additionalTextX = logoLeft + logoWidth + 10f // Adjust the horizontal position
         val additionalTextY = bounds.centerY() + heartBeatPaint.textSize / 2 - 47 // Center the additional text vertically
 
         // Draw the additional text
