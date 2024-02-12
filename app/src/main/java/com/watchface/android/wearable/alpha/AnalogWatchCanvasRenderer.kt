@@ -16,10 +16,12 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.BatteryManager
+import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.util.Log
 import android.view.SurfaceHolder
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.wear.watchface.ComplicationSlotsManager
 import androidx.wear.watchface.Renderer
@@ -33,6 +35,7 @@ import com.google.android.gms.fitness.data.Field
 import com.watchface.android.wearable.alpha.model.InnerScheduleModel
 import com.watchface.android.wearable.alpha.model.MainSchedule
 import com.watchface.android.wearable.alpha.sharedpreferences.SharedPreferences
+import com.watchface.android.wearable.alpha.utils.AlarmHelper
 import com.watchface.android.wearable.alpha.utils.Constants
 import com.watchface.android.wearable.alpha.utils.JsonParser
 import java.text.SimpleDateFormat
@@ -124,6 +127,7 @@ class AnalogWatchCanvasRenderer(
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun render(
         canvas: Canvas,
         bounds: Rect,
@@ -192,9 +196,8 @@ class AnalogWatchCanvasRenderer(
                                             endTime
                                         ).seconds.toInt() <= i.vibrateBeforeEndSecs
                                     ) {
-                                        Log.d(TAG, "vibrating end")
-
                                         if (nameMap[i.name] == 0) {
+                                            Log.d(TAG, "vibrating end")
                                             nameMap[i.name] = null
                                             vibrate(i.vibrateBeforeEnd.toLongArray())
                                         }
@@ -217,10 +220,8 @@ class AnalogWatchCanvasRenderer(
                                             currentTime
                                         ).seconds.toInt() <= 1
                                     ) {
-
-                                        Log.d(TAG, "vibrating start")
-
                                         if (nameMap[i.name] == null) {
+                                            Log.d(TAG, "vibrating start")
                                             nameMap[i.name] = 0
                                             vibrate(i.vibrateOnStart.toLongArray())
                                         }
@@ -299,6 +300,7 @@ class AnalogWatchCanvasRenderer(
         drawBatteryPercentage(canvas, bounds, getWatchBatteryLevel(context), primaryColor)
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun findNextGreatest(currentTime: LocalTime, currentDateTime: ZonedDateTime): InnerScheduleModel? {
         var nextGreaterValue: InnerScheduleModel? = null
         var temp = 0
@@ -309,6 +311,22 @@ class AnalogWatchCanvasRenderer(
                     if (element.startTime > currentTime) {
                         temp++
                         nextGreaterValue = element
+//                        if(SharedPreferences.read("startScheduledHour", 0) != element.startTime.hour || SharedPreferences.read("startScheduledMinute", 0) != element.startTime.minute){
+//                            AlarmHelper(context).setExactLocalTimeAlarm(element.startTime, currentDateTime)
+//                            SharedPreferences.write("startScheduledHour", element.startTime.hour)
+//                            SharedPreferences.write("startScheduledMinute", element.startTime.minute)
+//                        }else{
+////                            Log.d(TAG, "start time already scheduled")
+//                        }
+//
+//                        if(SharedPreferences.read("endScheduledHour", 0) != element.endTime.hour || SharedPreferences.read("endScheduledMinute", 0) != element.endTime.minute){
+//                            AlarmHelper(context).setExactLocalTimeAlarm(element.endTime, currentDateTime)
+//                            SharedPreferences.write("endScheduledHour", element.endTime.hour)
+//                            SharedPreferences.write("endScheduledMinute", element.endTime.minute)
+//                        }else{
+////                            Log.d(TAG, "end time already scheduled")
+//                        }
+
                         break
                     }
                 }

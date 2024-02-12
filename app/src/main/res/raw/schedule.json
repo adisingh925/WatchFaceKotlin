@@ -10,72 +10,77 @@
       ],
       "schedule": [
         {
-          "name": "Work",
-          "startTime": "03:51",
-          "endTime": "03:55",
+          "name": "sat-1",
+          "startTime": "07:16",
+          "endTime": "07:18",
           "habits": [
-            "Check email",
-            "Post update"
+            "Attend team meeting"
           ],
           "vibrateOnStart": [
-            0,
-            500,
-            1000,
-            500
+            0,1000,250,1000
           ],
           "vibrateBeforeEnd": [
-            0,2000
+            0,1000,250,1000,250,1000
           ],
           "vibrateBeforeEndSecs": 60
         },
         {
-          "name": "Lunch",
-          "startTime": "12:00",
-          "endTime": "13:00",
+          "name": "sat-2",
+          "startTime": "06:08",
+          "endTime": "06:10",
           "habits": [
-            "Eat",
-            "Take a short walk",
-            "Have Fun!"
+            "Attend team meeting"
           ],
           "vibrateOnStart": [
-            500,
-            1000
+            0,1000,250,1000
           ],
           "vibrateBeforeEnd": [
-            1000
-          ],
-          "vibrateBeforeEndSecs": 300
-        },
-        {
-          "name": "Meetings",
-          "startTime": "16:01",
-          "endTime": "17:25",
-          "habits": [
-            "Attend team meeting",
-            "Review project"
-          ],
-          "vibrateOnStart": [
-            500
-          ],
-          "vibrateBeforeEnd": [
-            1000
+            0,1000,250,1000,250,1000
           ],
           "vibrateBeforeEndSecs": 60
         },
         {
-          "name": "Sleep",
-          "startTime": "01:02",
-          "endTime": "01:07",
+          "name": "sat-3",
+          "startTime": "06:10",
+          "endTime": "06:12",
           "habits": [
-            "Attend team meeting",
-            "Review project status",
-            "Have Fun!"
+            "Attend team meeting"
           ],
           "vibrateOnStart": [
-            0, 500, 1000, 500
+            0,1000,250,1000
           ],
           "vibrateBeforeEnd": [
-            0,1000
+            0,1000,250,1000,250,1000
+          ],
+          "vibrateBeforeEndSecs": 60
+        },
+        {
+          "name": "sat-4",
+          "startTime": "06:12",
+          "endTime": "06:14",
+          "habits": [
+            "Attend team meeting"
+          ],
+          "vibrateOnStart": [
+            0,1000,250,1000
+          ],
+          "vibrateBeforeEnd": [
+            0,1000,250,1000,250,1000
+          ],
+          "vibrateBeforeEndSecs": 60
+        },
+        {
+          "name": "sat-5",
+          "startTime": "06:14",
+          "endTime": "06:16",
+          "habits": [
+            "Attend team meeting"
+          ],
+          "vibrateOnStart": [
+            0,1000,250,1000
+          ],
+          "vibrateBeforeEnd": [
+            0,1000,250,1000,250,1000
           ],
           "vibrateBeforeEndSecs": 60
         }
@@ -88,8 +93,8 @@
       "schedule": [
         {
           "name": "sat-1",
-          "startTime": "23:16",
-          "endTime": "23:18",
+          "startTime": "04:16",
+          "endTime": "04:18",
           "habits": [
             "Attend team meeting"
           ],
@@ -103,8 +108,8 @@
         },
         {
           "name": "sat-2",
-          "startTime": "23:18",
-          "endTime": "23:20",
+          "startTime": "04:18",
+          "endTime": "04:20",
           "habits": [
             "Attend team meeting"
           ],
@@ -118,8 +123,38 @@
         },
         {
           "name": "sat-3",
-          "startTime": "23:20",
-          "endTime": "23:22",
+          "startTime": "04:20",
+          "endTime": "04:22",
+          "habits": [
+            "Attend team meeting"
+          ],
+          "vibrateOnStart": [
+            0,1000,250,5000
+          ],
+          "vibrateBeforeEnd": [
+            0,1000,250,1000,250,1000
+          ],
+          "vibrateBeforeEndSecs": 60
+        },
+        {
+          "name": "sat-4",
+          "startTime": "04:22",
+          "endTime": "04:24",
+          "habits": [
+            "Attend team meeting"
+          ],
+          "vibrateOnStart": [
+            0,1000,250,5000
+          ],
+          "vibrateBeforeEnd": [
+            0,1000,250,1000,250,1000
+          ],
+          "vibrateBeforeEndSecs": 60
+        },
+        {
+          "name": "sat-5",
+          "startTime": "04:24",
+          "endTime": "04:26",
           "habits": [
             "Attend team meeting"
           ],
