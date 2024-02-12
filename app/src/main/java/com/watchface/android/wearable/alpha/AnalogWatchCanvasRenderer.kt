@@ -21,6 +21,7 @@ import android.os.Vibrator
 import android.util.Log
 import android.view.SurfaceHolder
 import androidx.core.content.ContextCompat
+import androidx.wear.watchface.ComplicationSlotsManager
 import androidx.wear.watchface.Renderer
 import androidx.wear.watchface.WatchState
 import androidx.wear.watchface.style.CurrentUserStyleRepository
@@ -60,6 +61,7 @@ class AnalogWatchCanvasRenderer(
     private val context: Context,
     surfaceHolder: SurfaceHolder,
     watchState: WatchState,
+    private val complicationSlotsManager: ComplicationSlotsManager,
     currentUserStyleRepository: CurrentUserStyleRepository,
     canvasType: Int
 ) : Renderer.CanvasRenderer2<AnalogWatchCanvasRenderer.AnalogSharedAssets>(
@@ -90,29 +92,6 @@ class AnalogWatchCanvasRenderer(
         sensorManager.registerListener(this, heartRateSensor, Constants.HEART_SENSOR_SPEED)
     }
 
-    private val fitnessOptions = FitnessOptions.builder()
-        .addDataType(DataType.TYPE_STEP_COUNT_CUMULATIVE)
-        .addDataType(DataType.TYPE_STEP_COUNT_DELTA)
-        .build()
-
-    private fun getGoogleAccount() = GoogleSignIn.getAccountForExtension(context, fitnessOptions)
-
-    private fun readData() {
-        Fitness.getHistoryClient(context, getGoogleAccount())
-            .readDailyTotal(DataType.TYPE_STEP_COUNT_DELTA)
-            .addOnSuccessListener { dataSet ->
-                val total = when {
-                    dataSet.isEmpty -> 0
-                    else -> dataSet.dataPoints.first().getValue(Field.FIELD_STEPS).asInt()
-                }
-                stepCount = total
-                Log.i(AnalogWatchFaceService.TAG, "Total steps: $total")
-            }
-            .addOnFailureListener { e ->
-                Log.w(AnalogWatchFaceService.TAG, "There was a problem getting the step count.", e)
-            }
-    }
-
     override suspend fun createSharedAssets(): AnalogSharedAssets {
         return AnalogSharedAssets()
     }
@@ -129,7 +108,21 @@ class AnalogWatchCanvasRenderer(
         zonedDateTime: ZonedDateTime,
         sharedAssets: AnalogSharedAssets
     ) {
-        TODO("Not yet implemented")
+        canvas.drawColor(renderParameters.highlightLayer!!.backgroundTint)
+
+        for ((_, complication) in complicationSlotsManager.complicationSlots) {
+            if (complication.enabled) {
+                complication.renderHighlightLayer(canvas, zonedDateTime, renderParameters)
+            }
+        }
+    }
+
+    private fun drawComplications(canvas: Canvas, zonedDateTime: ZonedDateTime) {
+        for ((_, complication) in complicationSlotsManager.complicationSlots) {
+            if (complication.enabled) {
+                complication.render(canvas, zonedDateTime, renderParameters)
+            }
+        }
     }
 
     override fun render(
@@ -138,12 +131,15 @@ class AnalogWatchCanvasRenderer(
         zonedDateTime: ZonedDateTime,
         sharedAssets: AnalogSharedAssets
     ) {
-
-        readData()
         /**
          * This will clear the canvas with the background color
          */
         canvas.drawColor(Color.BLACK)
+
+        /**
+         * displaying step count complication
+         */
+        drawComplications(canvas, zonedDateTime)
 
         // Specify the desired timezone, for example "America/New_York"
         val desiredTimeZone = ZoneId.of(Constants.TIMEZONE)
@@ -176,7 +172,6 @@ class AnalogWatchCanvasRenderer(
             == PackageManager.PERMISSION_GRANTED
         ) {
 //            drawNumberOfSteps(canvas, bounds, (stepCount - SharedPreferences.read("currentDaySteps",0)).toString(), primaryColor)
-            drawNumberOfSteps(canvas, bounds, stepCount.toString(), primaryColor)
             displayHeartbeatAndLogo(canvas, bounds, heartRateValue.toString(), primaryColor)
         } else {
             Log.d(TAG, "Permission not granted")

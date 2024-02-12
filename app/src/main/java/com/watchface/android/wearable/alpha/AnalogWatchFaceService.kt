@@ -33,6 +33,13 @@ import com.watchface.android.wearable.alpha.sharedpreferences.SharedPreferences
  */
 class AnalogWatchFaceService : WatchFaceService() {
 
+    override fun createComplicationSlotsManager(
+        currentUserStyleRepository: CurrentUserStyleRepository
+    ): ComplicationSlotsManager = createComplicationSlotManager(
+        context = applicationContext,
+        currentUserStyleRepository = currentUserStyleRepository
+    )
+
     override suspend fun createWatchFace(
         surfaceHolder: SurfaceHolder,
         watchState: WatchState,
@@ -47,6 +54,7 @@ class AnalogWatchFaceService : WatchFaceService() {
             context = applicationContext,
             surfaceHolder = surfaceHolder,
             watchState = watchState,
+            complicationSlotsManager = complicationSlotsManager,
             currentUserStyleRepository = currentUserStyleRepository,
             canvasType = CanvasType.HARDWARE
         )
