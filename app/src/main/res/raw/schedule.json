@@ -11,8 +11,8 @@
       "schedule": [
         {
           "name": "sat-1",
-          "startTime": "07:16",
-          "endTime": "07:18",
+          "startTime": "23:37",
+          "endTime": "23:39",
           "habits": [
             "Attend team meeting"
           ],
@@ -26,8 +26,8 @@
         },
         {
           "name": "sat-2",
-          "startTime": "06:08",
-          "endTime": "06:10",
+          "startTime": "23:39",
+          "endTime": "23:41",
           "habits": [
             "Attend team meeting"
           ],
@@ -41,8 +41,8 @@
         },
         {
           "name": "sat-3",
-          "startTime": "06:10",
-          "endTime": "06:12",
+          "startTime": "23:41",
+          "endTime": "23:43",
           "habits": [
             "Attend team meeting"
           ],
@@ -56,8 +56,8 @@
         },
         {
           "name": "sat-4",
-          "startTime": "06:12",
-          "endTime": "06:14",
+          "startTime": "23:43",
+          "endTime": "23:45",
           "habits": [
             "Attend team meeting"
           ],
@@ -71,8 +71,8 @@
         },
         {
           "name": "sat-5",
-          "startTime": "06:14",
-          "endTime": "06:16",
+          "startTime": "23:45",
+          "endTime": "23:47",
           "habits": [
             "Attend team meeting"
           ],

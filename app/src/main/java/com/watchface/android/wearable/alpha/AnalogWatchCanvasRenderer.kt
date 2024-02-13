@@ -27,11 +27,6 @@ import androidx.wear.watchface.ComplicationSlotsManager
 import androidx.wear.watchface.Renderer
 import androidx.wear.watchface.WatchState
 import androidx.wear.watchface.style.CurrentUserStyleRepository
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.fitness.Fitness
-import com.google.android.gms.fitness.FitnessOptions
-import com.google.android.gms.fitness.data.DataType
-import com.google.android.gms.fitness.data.Field
 import com.watchface.android.wearable.alpha.model.InnerScheduleModel
 import com.watchface.android.wearable.alpha.model.MainSchedule
 import com.watchface.android.wearable.alpha.sharedpreferences.SharedPreferences
@@ -189,55 +184,7 @@ class AnalogWatchCanvasRenderer(
                         val spansOverMidnight = endTime.isBefore(startTime)
 
                         if ((currentTime.isAfter(startTime) && currentTime.isBefore(endTime)) || (spansOverMidnight && (currentTime.isAfter(startTime) || currentTime.isBefore(endTime)))) {
-                            if (SharedPreferences.read("vibration", 1) == 1) {
-                                if(!spansOverMidnight){
-                                    if (Duration.between(
-                                            currentTime,
-                                            endTime
-                                        ).seconds.toInt() <= i.vibrateBeforeEndSecs
-                                    ) {
-                                        if (nameMap[i.name] == 0) {
-                                            Log.d(TAG, "vibrating end")
-                                            nameMap[i.name] = null
-                                            vibrate(i.vibrateBeforeEnd.toLongArray())
-                                        }
-                                    }
-                                }else{
-                                    val timeDiff = Duration.between(currentTime, endTime).seconds.toInt()
 
-                                    if (timeDiff <= i.vibrateBeforeEndSecs
-                                    ) {
-                                        if (nameMap[i.name] == 0) {
-                                            nameMap[i.name] = null
-                                            vibrate(i.vibrateBeforeEnd.toLongArray())
-                                        }
-                                    }
-                                }
-
-                                if(!spansOverMidnight){
-                                    if (Duration.between(
-                                            startTime,
-                                            currentTime
-                                        ).seconds.toInt() <= 1
-                                    ) {
-                                        if (nameMap[i.name] == null) {
-                                            Log.d(TAG, "vibrating start")
-                                            nameMap[i.name] = 0
-                                            vibrate(i.vibrateOnStart.toLongArray())
-                                        }
-                                    }
-                                }else{
-                                    val timeDiff = Duration.between(startTime, currentTime).seconds.toInt()
-
-                                    if (timeDiff <= 1
-                                    ) {
-                                        if (nameMap[i.name] == null) {
-                                            nameMap[i.name] = 0
-                                            vibrate(i.vibrateOnStart.toLongArray())
-                                        }
-                                    }
-                                }
-                            }
 
                             val time = "${
                                 getDifferenceOfLocalTime(
@@ -311,21 +258,19 @@ class AnalogWatchCanvasRenderer(
                     if (element.startTime > currentTime) {
                         temp++
                         nextGreaterValue = element
-//                        if(SharedPreferences.read("startScheduledHour", 0) != element.startTime.hour || SharedPreferences.read("startScheduledMinute", 0) != element.startTime.minute){
-//                            AlarmHelper(context).setExactLocalTimeAlarm(element.startTime, currentDateTime)
-//                            SharedPreferences.write("startScheduledHour", element.startTime.hour)
-//                            SharedPreferences.write("startScheduledMinute", element.startTime.minute)
-//                        }else{
-////                            Log.d(TAG, "start time already scheduled")
-//                        }
-//
-//                        if(SharedPreferences.read("endScheduledHour", 0) != element.endTime.hour || SharedPreferences.read("endScheduledMinute", 0) != element.endTime.minute){
-//                            AlarmHelper(context).setExactLocalTimeAlarm(element.endTime, currentDateTime)
-//                            SharedPreferences.write("endScheduledHour", element.endTime.hour)
-//                            SharedPreferences.write("endScheduledMinute", element.endTime.minute)
-//                        }else{
-////                            Log.d(TAG, "end time already scheduled")
-//                        }
+                        if (SharedPreferences.read("vibration", 1) == 1) {
+                            if(SharedPreferences.read("startScheduledHour", 0) != element.startTime.hour || SharedPreferences.read("startScheduledMinute", 0) != element.startTime.minute){
+                                AlarmHelper(context).setExactLocalTimeAlarm(element.startTime, 0, element.vibrateOnStart)
+                                SharedPreferences.write("startScheduledHour", element.startTime.hour)
+                                SharedPreferences.write("startScheduledMinute", element.startTime.minute)
+                            }
+
+                            if(SharedPreferences.read("endScheduledHour", 0) != element.endTime.hour || SharedPreferences.read("endScheduledMinute", 0) != element.endTime.minute){
+                                AlarmHelper(context).setExactLocalTimeAlarm(element.endTime, element.vibrateBeforeEndSecs, element.vibrateBeforeEnd)
+                                SharedPreferences.write("endScheduledHour", element.endTime.hour)
+                                SharedPreferences.write("endScheduledMinute", element.endTime.minute)
+                            }
+                        }
 
                         break
                     }
@@ -337,6 +282,20 @@ class AnalogWatchCanvasRenderer(
             for (scheduleModel in mainSchedule.mainSchedule) {
                 if(scheduleModel.days.contains(getNextDay())){
                     for (element in scheduleModel.schedule) {
+                        SharedPreferences.write("day",1)
+                        if (SharedPreferences.read("vibration", 1) == 1) {
+                            if(SharedPreferences.read("startScheduledHour", 0) != element.startTime.hour || SharedPreferences.read("startScheduledMinute", 0) != element.startTime.minute){
+                                AlarmHelper(context).setExactLocalTimeAlarm(element.startTime, 0, element.vibrateOnStart)
+                                SharedPreferences.write("startScheduledHour", element.startTime.hour)
+                                SharedPreferences.write("startScheduledMinute", element.startTime.minute)
+                            }
+
+                            if(SharedPreferences.read("endScheduledHour", 0) != element.endTime.hour || SharedPreferences.read("endScheduledMinute", 0) != element.endTime.minute){
+                                AlarmHelper(context).setExactLocalTimeAlarm(element.endTime, element.vibrateBeforeEndSecs, element.vibrateBeforeEnd)
+                                SharedPreferences.write("endScheduledHour", element.endTime.hour)
+                                SharedPreferences.write("endScheduledMinute", element.endTime.minute)
+                            }
+                        }
                         nextGreaterValue = element
                         break
                     }

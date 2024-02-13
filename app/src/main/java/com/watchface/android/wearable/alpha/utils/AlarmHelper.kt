@@ -10,10 +10,7 @@ import android.os.Vibrator
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.watchface.android.wearable.alpha.sharedpreferences.SharedPreferences
-import java.time.Duration
-import java.time.LocalDateTime
 import java.time.LocalTime
-import java.time.ZonedDateTime
 import java.util.*
 
 class AlarmHelper(private val context: Context) {
@@ -22,29 +19,45 @@ class AlarmHelper(private val context: Context) {
     private val vibrator: Vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
     @RequiresApi(Build.VERSION_CODES.S)
-    fun setExactLocalTimeAlarm(localTime: LocalTime, currentDateTime: ZonedDateTime) {
+    fun setExactLocalTimeAlarm(localTime: LocalTime, vibrateBeforeEndSecs : Int, vibrationPattern : List<Long>) {
 
-        val utcTimeInMillis = Duration.between(
-            currentDateTime.toLocalTime(),
-            localTime
-        ).toMillis() + System.currentTimeMillis()
+        val calendar = Calendar.getInstance()
 
-        Log.d("AlarmHelper", "Setting alarm for $localTime, $utcTimeInMillis")
+        calendar.apply {
+            set(Calendar.HOUR_OF_DAY, localTime.hour)
+            set(Calendar.MINUTE, localTime.minute)
+            set(Calendar.SECOND, localTime.second)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        if(calendar.before(Calendar.getInstance())){
+            Log.d("AlarmHelper", "Alarm time is in the past")
+            calendar.add(Calendar.DATE, 1)
+        }else{
+            if(SharedPreferences.read("day", 0) == 1){
+                SharedPreferences.write("day", 0)
+                calendar.add(Calendar.DATE, 1)
+            }
+        }
+
+        val requestCode = SharedPreferences.read("requestCode",0)
+        SharedPreferences.write("requestCode", requestCode + 1)
 
         val intent = Intent(context, AlarmReceiver::class.java)
-        val pendingIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        intent.putExtra("vibrationPattern", vibrationPattern.toLongArray())
+        val pendingIntent = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
         if (!alarmManager.canScheduleExactAlarms()) {
             Log.d("AlarmHelper", "Can't schedule exact alarms")
             alarmManager.setExact(
                 AlarmManager.RTC_WAKEUP,
-                utcTimeInMillis,
+                calendar.timeInMillis - (vibrateBeforeEndSecs * 1000),
                 pendingIntent)
         }else{
             Log.d("AlarmHelper", "Can schedule exact alarms")
             alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
-                utcTimeInMillis,
+                calendar.timeInMillis - (vibrateBeforeEndSecs * 1000),
                 pendingIntent
             )
         }
@@ -60,8 +73,18 @@ class AlarmHelper(private val context: Context) {
         }
     }
 
-    fun vibrate() {
-        vibrator.vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
+    fun cancelAllAlarms(){
+        val intent = Intent(context, AlarmReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context, 0, intent, PendingIntent.FLAG_NO_CREATE or PendingIntent.FLAG_IMMUTABLE
+        )
+        pendingIntent?.let {
+            alarmManager.cancel(it)
+        }
+    }
+
+    fun vibrate(pattern: LongArray) {
+        vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
     }
 }
 
