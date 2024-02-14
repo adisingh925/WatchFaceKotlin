@@ -30,14 +30,12 @@ class AlarmHelper(private val context: Context) {
             set(Calendar.MILLISECOND, 0)
         }
 
-        if(calendar.before(Calendar.getInstance())){
+        if(SharedPreferences.read("day", 0) == 1){
+            SharedPreferences.write("day", 0)
+            calendar.add(Calendar.DATE, 1)
+        }else if(calendar.before(Calendar.getInstance())){
             Log.d("AlarmHelper", "Alarm time is in the past")
             calendar.add(Calendar.DATE, 1)
-        }else{
-            if(SharedPreferences.read("day", 0) == 1){
-                SharedPreferences.write("day", 0)
-                calendar.add(Calendar.DATE, 1)
-            }
         }
 
         val requestCode = SharedPreferences.read("requestCode",0)

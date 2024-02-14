@@ -17,8 +17,6 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.BatteryManager
 import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
 import android.util.Log
 import android.view.SurfaceHolder
 import androidx.annotation.RequiresApi
@@ -72,20 +70,17 @@ class AnalogWatchCanvasRenderer(
 ), SensorEventListener {
     class AnalogSharedAssets : SharedAssets {
         override fun onDestroy() {
+            Log.d(TAG, "AnalogSharedAssets.onDestroy()")
         }
     }
 
     private val sensorManager by lazy { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
-    private val stepCounterSensor: Sensor? by lazy { sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) }
     private val heartRateSensor: Sensor? by lazy { sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE) }
     private var mainSchedule: MainSchedule = JsonParser(context).readAndParseJsonFile()
-    private val nameMap = HashMap<String, Int?>()
-    private val vibrator: Vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var heartRateValue = 0
 
     init {
-        sensorManager.registerListener(this, stepCounterSensor, SensorManager.SENSOR_DELAY_NORMAL)
         sensorManager.registerListener(this, heartRateSensor, Constants.HEART_SENSOR_SPEED)
     }
 
@@ -95,7 +90,10 @@ class AnalogWatchCanvasRenderer(
 
     override fun onDestroy() {
         Log.d(TAG, "onDestroy()")
+        sensorManager.unregisterListener(this, heartRateSensor)
+        AlarmHelper(context).cancelAllAlarms()
         scope.cancel("DigitalWatchCanvasRenderer scope clear() request")
+
         super.onDestroy()
     }
 
@@ -170,8 +168,6 @@ class AnalogWatchCanvasRenderer(
             == PackageManager.PERMISSION_GRANTED
         ) {
             displayHeartbeatAndLogo(canvas, bounds, heartRateValue.toString(), primaryColor)
-        } else {
-            Log.d(TAG, "Permission not granted")
         }
 
         if (SharedPreferences.read("schedule", 1) == 1) {
@@ -184,7 +180,6 @@ class AnalogWatchCanvasRenderer(
                         val spansOverMidnight = endTime.isBefore(startTime)
 
                         if ((currentTime.isAfter(startTime) && currentTime.isBefore(endTime)) || (spansOverMidnight && (currentTime.isAfter(startTime) || currentTime.isBefore(endTime)))) {
-
 
                             val time = "${
                                 getDifferenceOfLocalTime(
@@ -282,15 +277,16 @@ class AnalogWatchCanvasRenderer(
             for (scheduleModel in mainSchedule.mainSchedule) {
                 if(scheduleModel.days.contains(getNextDay())){
                     for (element in scheduleModel.schedule) {
-                        SharedPreferences.write("day",1)
                         if (SharedPreferences.read("vibration", 1) == 1) {
                             if(SharedPreferences.read("startScheduledHour", 0) != element.startTime.hour || SharedPreferences.read("startScheduledMinute", 0) != element.startTime.minute){
+                                SharedPreferences.write("day",1)
                                 AlarmHelper(context).setExactLocalTimeAlarm(element.startTime, 0, element.vibrateOnStart)
                                 SharedPreferences.write("startScheduledHour", element.startTime.hour)
                                 SharedPreferences.write("startScheduledMinute", element.startTime.minute)
                             }
 
                             if(SharedPreferences.read("endScheduledHour", 0) != element.endTime.hour || SharedPreferences.read("endScheduledMinute", 0) != element.endTime.minute){
+                                SharedPreferences.write("day",1)
                                 AlarmHelper(context).setExactLocalTimeAlarm(element.endTime, element.vibrateBeforeEndSecs, element.vibrateBeforeEnd)
                                 SharedPreferences.write("endScheduledHour", element.endTime.hour)
                                 SharedPreferences.write("endScheduledMinute", element.endTime.minute)
@@ -311,10 +307,6 @@ class AnalogWatchCanvasRenderer(
         calendar.add(Calendar.DAY_OF_YEAR, 1)
         val dateFormat = SimpleDateFormat("EEE", Locale.getDefault())
         return dateFormat.format(calendar.time)
-    }
-
-    private fun vibrate(pattern: LongArray) {
-        vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
     }
 
     private fun getNumberOf15MinIntervalBetweenLocalTime(time1: LocalTime, time2: LocalTime): Long {
