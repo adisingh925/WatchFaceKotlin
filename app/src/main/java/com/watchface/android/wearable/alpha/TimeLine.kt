@@ -65,7 +65,7 @@ class TimeLine : AppCompatActivity() {
         recyclerView.layoutManager = LinearLayoutManager(this)
     }
 
-    fun getNextDayOfWeekShortForm(currentDayShortForm: String): String {
+    private fun getNextDayOfWeekShortForm(currentDayShortForm: String): String {
         val dateFormat = SimpleDateFormat("EEE", Locale.getDefault())
         val calendar = Calendar.getInstance()
         val currentDate = dateFormat.parse(currentDayShortForm)
