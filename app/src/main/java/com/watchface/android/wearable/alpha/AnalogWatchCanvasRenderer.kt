@@ -1,30 +1,43 @@
 package com.watchface.android.wearable.alpha
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
+import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.location.Location
 import android.os.BatteryManager
 import android.os.Build
+import android.os.Looper
 import android.util.Log
 import android.view.SurfaceHolder
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.ColorUtils
 import androidx.wear.watchface.ComplicationSlotsManager
 import androidx.wear.watchface.Renderer
 import androidx.wear.watchface.WatchState
 import androidx.wear.watchface.style.CurrentUserStyleRepository
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import com.watchface.android.wearable.alpha.model.InnerScheduleModel
 import com.watchface.android.wearable.alpha.model.MainSchedule
 import com.watchface.android.wearable.alpha.sharedpreferences.SharedPreferences
@@ -41,7 +54,9 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import kotlin.math.cos
+import kotlin.math.floor
 import kotlin.math.sin
+import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -79,6 +94,7 @@ class AnalogWatchCanvasRenderer(
     private var mainSchedule: MainSchedule = JsonParser(context).readAndParseJsonFile()
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var heartRateValue = 0
+    val locationClient = LocationServices.getFusedLocationProviderClient(context)
 
     init {
         sensorManager.registerListener(this, heartRateSensor, Constants.HEART_SENSOR_SPEED)
@@ -120,6 +136,7 @@ class AnalogWatchCanvasRenderer(
         }
     }
 
+    @SuppressLint("MissingPermission")
     @RequiresApi(Build.VERSION_CODES.S)
     override fun render(
         canvas: Canvas,
@@ -130,12 +147,7 @@ class AnalogWatchCanvasRenderer(
         /**
          * This will clear the canvas with the background color
          */
-        canvas.drawColor(Color.BLACK)
-
-        /**
-         * displaying step count complication
-         */
-        drawComplications(canvas, zonedDateTime)
+        canvas.drawColor(Color.WHITE)
 
         // Specify the desired timezone, for example "America/New_York"
         val desiredTimeZone = ZoneId.of(Constants.TIMEZONE)
@@ -153,88 +165,48 @@ class AnalogWatchCanvasRenderer(
         /**
          * displaying time in 24h format in the canvas
          */
-        drawTimeIn24HourFormat(canvas, bounds, primaryColor, currentTime)
+        drawTimeIn12HourFormat(canvas, bounds, primaryColor)
 
-        /**
-         * displaying the day of week, date and the month in the canvas
-         */
-        drawDate(canvas, bounds, primaryColor, currentDate)
+        val priority = Priority.PRIORITY_HIGH_ACCURACY
+        locationClient.getCurrentLocation(
+            priority,
+            CancellationTokenSource().token,
+        ).addOnCompleteListener {
+            if (it.isSuccessful) {
+                try {
+                    val fetchedLocation = it.result
 
-        /**
-         * check if the permission is granted or not
-         * if the permission is granted then display the number of steps and heartbeat in the canvas
-         */
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.BODY_SENSORS)
-            == PackageManager.PERMISSION_GRANTED
-        ) {
-            displayHeartbeatAndLogo(canvas, bounds, heartRateValue.toString(), primaryColor)
-        }
+                    Log.d(
+                        "Location",
+                        "Fetched location: ${fetchedLocation.latitude}, ${fetchedLocation.longitude}"
+                    )
 
-        if (SharedPreferences.read("schedule", 1) == 1) {
-            for (scheduleModel in mainSchedule.mainSchedule) {
-                if (scheduleModel.days.contains(getCurrentDayShortForm(currentDate))) {
-                    for (i in scheduleModel.schedule) {
-                        val startTime = i.startTime
-                        val endTime = i.endTime
+                    var codes = convertDegreesArrayToLocat(
+                        arrayOf(fetchedLocation.latitude, fetchedLocation.longitude),
+                        5
+                    )
 
-                        val spansOverMidnight = endTime.isBefore(startTime)
-
-                        if ((currentTime.isAfter(startTime) && currentTime.isBefore(endTime)) || (spansOverMidnight && (currentTime.isAfter(startTime) || currentTime.isBefore(endTime)))) {
-
-                            val time = "${
-                                getDifferenceOfLocalTime(
-                                    startTime,
-                                    endTime
-                                )
-                            } | ${convertLocalTimeTo24HourFormat(startTime)} - ${
-                                convertLocalTimeTo24HourFormat(endTime)
-                            }"
-                            drawProgressArc(
-                                canvas,
-                                bounds,
-                                (getLocalTimeDifferenceInMinutes(
-                                    startTime,
-                                    currentTime
-                                ) * (60F / getLocalTimeDifferenceInMinutes(
-                                    startTime,
-                                    endTime
-                                ).toFloat())),
-                                getDifferenceOfLocalTime(startTime, currentTime),
-                                getDifferenceOfLocalTime(currentTime, endTime),
-                                (getNumberOf15MinIntervalBetweenLocalTime(
-                                    startTime,
-                                    endTime
-                                ) + 1).toInt(),
-                                primaryColor,
-                                secondaryColor
-                            )
-                            displayCurrentScheduleWithTime(
-                                canvas,
-                                bounds,
-                                i.name,
-                                time,
-                                primaryColor
-                            )
-
-                            drawCurrentScheduleHabits(canvas, i.habits, secondaryColor)
-                        }
-
-                        val nextGreatest = findNextGreatest(currentTime, currentDate)
-
-                        if (nextGreatest != null) {
-                            drawNextSchedule(
-                                canvas,
-                                nextGreatest.name,
-                                "${convertLocalTimeTo24HourFormat(nextGreatest.startTime)} - ${
-                                    convertLocalTimeTo24HourFormat(nextGreatest.endTime)
-                                }",
-                                primaryColor
-                            )
-                        }
-                    }
+                    SharedPreferences.write("location", codes.joinToString(","))
+                } catch (e: Exception) {
+                    Log.d("Location", "Failed to send location data." + e.message)
                 }
             }
         }
+
+        val codes = SharedPreferences.read("location", "")
+
+        Log.d("Location", "codes: ${codes?.split(",")}")
+
+        // [kf, an, kt, jm, wc]
+
+        /** comment this code when the actual icons are added*/
+        drawIconsCentered(
+            canvas,
+            bounds,
+            codes?.split(",") ?: emptyList(),
+            15f,
+            context
+        )
 
         /**
          * display the battery percentage in the canvas
@@ -242,138 +214,109 @@ class AnalogWatchCanvasRenderer(
         drawBatteryPercentage(canvas, bounds, getWatchBatteryLevel(context), primaryColor)
     }
 
-    @RequiresApi(Build.VERSION_CODES.S)
-    private fun findNextGreatest(currentTime: LocalTime, currentDateTime: ZonedDateTime): InnerScheduleModel? {
-        var nextGreaterValue: InnerScheduleModel? = null
-        var temp = 0
+    fun convertDegreesArrayToLocat(coords: Array<Double>, locatDepth: Int = 5): List<String> {
+        val locatBaseChars = "ABCDEFGHJKMNPQRTVWXY"
+        val degreesArray = arrayOf(coords[0], coords[1])
+        val coordsInt = arrayOf(0, 0)
+        val coordsLoc = arrayOf("", "")
 
-        for (scheduleModel in mainSchedule.mainSchedule) {
-            if(scheduleModel.days.contains(getCurrentDayShortForm(currentDateTime))){
-                for (element in scheduleModel.schedule) {
-                    if (element.startTime > currentTime) {
-                        temp++
-                        nextGreaterValue = element
-                        if (SharedPreferences.read("vibration", 1) == 1) {
-                            if(SharedPreferences.read("startScheduledHour", 0) != element.startTime.hour || SharedPreferences.read("startScheduledMinute", 0) != element.startTime.minute){
-                                AlarmHelper(context).setExactLocalTimeAlarm(element.startTime, 0, element.vibrateOnStart)
-                                SharedPreferences.write("startScheduledHour", element.startTime.hour)
-                                SharedPreferences.write("startScheduledMinute", element.startTime.minute)
-                            }
+        // LONGITUDE NORMALISE
+        degreesArray[0] += 180.0
+        while (degreesArray[0] > 360) degreesArray[0] -= 360.toDouble()
+        while (degreesArray[0] < 0) degreesArray[0] += 360.toDouble()
+        degreesArray[0] += 180.0
 
-                            if(SharedPreferences.read("endScheduledHour", 0) != element.endTime.hour || SharedPreferences.read("endScheduledMinute", 0) != element.endTime.minute){
-                                AlarmHelper(context).setExactLocalTimeAlarm(element.endTime, element.vibrateBeforeEndSecs, element.vibrateBeforeEnd)
-                                SharedPreferences.write("endScheduledHour", element.endTime.hour)
-                                SharedPreferences.write("endScheduledMinute", element.endTime.minute)
-                            }
-                        }
+        // LATITUDE NORMALISE
+        degreesArray[1] -= 90.0
+        degreesArray[1] = -degreesArray[1]
+        while (degreesArray[1] > 180) degreesArray[1] -= 180.toDouble()
+        while (degreesArray[1] < 0) degreesArray[1] += 180.toDouble()
 
-                        break
-                    }
-                }
+        // Convert Degs to Loc for long [0] and lat [1]
+        for (i in 0..1) {
+            // Normalize to 0-540 range and round down to integer
+            coordsInt[i] = floor(degreesArray[i] * 45000).toInt()
+
+            // Convert integer to locBase
+            while (coordsInt[i] > 0) {
+                val remainder = coordsInt[i] % 20
+                coordsLoc[i] = locatBaseChars[remainder] + coordsLoc[i]
+                coordsInt[i] = floor((coordsInt[i] / 20).toDouble()).toInt()
+            }
+            while (coordsLoc[i].length < 5) {
+                coordsLoc[i] = "A" + coordsLoc[i]
             }
         }
 
-        if(temp == 0){
-            for (scheduleModel in mainSchedule.mainSchedule) {
-                if(scheduleModel.days.contains(getNextDay())){
-                    for (element in scheduleModel.schedule) {
-                        if (SharedPreferences.read("vibration", 1) == 1) {
-                            if(SharedPreferences.read("startScheduledHour", 0) != element.startTime.hour || SharedPreferences.read("startScheduledMinute", 0) != element.startTime.minute){
-                                SharedPreferences.write("day",1)
-                                AlarmHelper(context).setExactLocalTimeAlarm(element.startTime, 0, element.vibrateOnStart)
-                                SharedPreferences.write("startScheduledHour", element.startTime.hour)
-                                SharedPreferences.write("startScheduledMinute", element.startTime.minute)
-                            }
-
-                            if(SharedPreferences.read("endScheduledHour", 0) != element.endTime.hour || SharedPreferences.read("endScheduledMinute", 0) != element.endTime.minute){
-                                SharedPreferences.write("day",1)
-                                AlarmHelper(context).setExactLocalTimeAlarm(element.endTime, element.vibrateBeforeEndSecs, element.vibrateBeforeEnd)
-                                SharedPreferences.write("endScheduledHour", element.endTime.hour)
-                                SharedPreferences.write("endScheduledMinute", element.endTime.minute)
-                            }
-                        }
-                        nextGreaterValue = element
-                        break
-                    }
-                }
-            }
+        val locArray = mutableListOf<String>()
+        for (i in 0 until minOf(coordsLoc[0].length, locatDepth)) {
+            locArray.add("${coordsLoc[1][i]}${coordsLoc[0][i]}".toLowerCase(Locale.ROOT))
         }
 
-        return nextGreaterValue
+        return locArray
     }
 
-    private fun getNextDay(): String {
-        val calendar = Calendar.getInstance()
-        calendar.add(Calendar.DAY_OF_YEAR, 1)
-        val dateFormat = SimpleDateFormat("EEE", Locale.getDefault())
-        return dateFormat.format(calendar.time)
-    }
-
-    private fun getNumberOf15MinIntervalBetweenLocalTime(time1: LocalTime, time2: LocalTime): Long {
-        if(time1.isAfter(time2)){
-            return ((1440 - Duration.between(LocalTime.MIDNIGHT, time1).toMinutes()) + Duration.between(LocalTime.MIDNIGHT, time2).toMinutes()) / 15
+    private fun drawIconsCentered(
+        canvas: Canvas,
+        bounds: Rect,
+        iconNames: List<String>, // A list of drawable resource IDs (VectorDrawable)
+        iconSpacing: Float, // Space between icons
+        context: Context
+    ) {
+        // Create a list to store the Bitmaps
+        val bitmaps = iconNames.mapNotNull { iconName ->
+            val drawableId =
+                context.resources.getIdentifier(iconName, "drawable", context.packageName)
+            if (drawableId != 0) drawableToBitmap(
+                context,
+                drawableId
+            ) else null // Only add valid IDs
         }
 
-        return Duration.between(time1, time2).toMinutes() / 15
+        // Calculate the total width of the icons, including spacing between them
+        val totalIconWidth = bitmaps.sumOf { it.width.toInt() } + (bitmaps.size - 1) * iconSpacing
+
+        // Calculate the starting X position to center the icons horizontally
+        val startX = bounds.exactCenterX() - totalIconWidth / 2
+
+        // Set the Y position to center the icons vertically in the available bounds
+        val startY = bounds.exactCenterY()
+
+        var currentX = startX
+
+        // Draw each icon (now a Bitmap) on the canvas
+        for (bitmap in bitmaps) {
+            // Draw the icon at the current X position
+            canvas.drawBitmap(bitmap, currentX, centerY, null)
+
+            // Move the X position for the next icon, adding spacing
+            currentX += bitmap.width + iconSpacing
+        }
     }
 
-    private fun getLocalTimeDifferenceInMinutes(time1: LocalTime, time2: LocalTime): Long {
-        if(time1.isAfter(time2)) {
-            return (86400 - Duration.between(LocalTime.MIDNIGHT, time1).seconds) + Duration.between(
-                LocalTime.MIDNIGHT,
-                time2
-            ).seconds
+    // Converts a VectorDrawable (or any drawable) to Bitmap
+    private fun drawableToBitmap(context: Context, drawableId: Int): Bitmap {
+        // Get the drawable resource
+        val drawable: Drawable? = ContextCompat.getDrawable(context, drawableId)
+
+        // Check if drawable is null
+        if (drawable == null) {
+            throw IllegalArgumentException("Drawable resource not found")
         }
 
-        return Duration.between(time1, time2).seconds
-    }
+        // Create a mutable bitmap with the size of the drawable
+        val bitmap = Bitmap.createBitmap(
+            58,
+            58,
+            Bitmap.Config.ARGB_8888
+        )
 
-    private fun getDifferenceOfLocalTime(time1: LocalTime, time2: LocalTime): String {
-        if(time1.isAfter(time2)){
-            val duration = Duration.ofSeconds((86400 - Duration.between(LocalTime.MIDNIGHT, time1).seconds) + Duration.between(LocalTime.MIDNIGHT, time2).seconds)
+        // Create a canvas to draw the drawable onto the bitmap
+        val canvas = Canvas(bitmap)
+        drawable.setBounds(0, 0, canvas.width, canvas.height)
+        drawable.draw(canvas)
 
-            val hours = duration.toHours()
-            val minutes = duration.toMinutes() % 60
-            val seconds = duration.seconds
-
-            return if (hours != 0L && minutes != 0L) {
-                "${hours}h ${minutes}m"
-            } else if (hours == 0L && minutes != 0L) {
-                "${minutes}m"
-            } else if (hours != 0L) {
-                "${hours}h"
-            } else {
-                "${seconds}s"
-            }
-        }else if(time1.isBefore(time2)) {
-            val duration = Duration.between(time1, time2)
-
-            val hours = duration.toHours()
-            val minutes = duration.toMinutes() % 60
-            val seconds = duration.seconds
-
-            return if (hours != 0L && minutes != 0L) {
-                "${hours}h ${minutes}m"
-            } else if (hours == 0L && minutes != 0L) {
-                "${minutes}m"
-            } else if (hours != 0L) {
-                "${hours}h"
-            } else {
-                "${seconds}s"
-            }
-        }
-
-        return ""
-    }
-
-    private fun convertLocalTimeTo24HourFormat(time: LocalTime): String {
-        val formatter = DateTimeFormatter.ofPattern("HH:mm")
-        return time.format(formatter)
-    }
-
-    private fun getCurrentDayShortForm(currentDateTime: ZonedDateTime): String {
-        val formatter = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
-        return currentDateTime.format(formatter)
+        return bitmap
     }
 
     private fun getTextPaint(fontSize: Float, alignment: Paint.Align, textColor: Int): Paint {
@@ -385,28 +328,15 @@ class AnalogWatchCanvasRenderer(
         }
     }
 
-    private fun displayCurrentScheduleWithTime(
-        canvas: Canvas,
-        bounds: Rect,
-        scheduleName: String,
-        scheduleTime: String,
-        primaryColor: Int
-    ) {
-        val heartBeatPaint = getTextPaint(12f, Paint.Align.CENTER, primaryColor)
-        val text1Y = bounds.top + 40f
-        val text2Y = bounds.top + 55f
-
-        canvas.drawText(scheduleName, bounds.exactCenterX(), text1Y, heartBeatPaint)
-        canvas.drawText(scheduleTime, bounds.exactCenterX(), text2Y, heartBeatPaint)
-    }
-
     private fun getWatchBatteryLevel(context: Context): Pair<Int, Boolean> {
-        val batteryIntent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        val batteryIntent =
+            context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         val level = batteryIntent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
         val scale = batteryIntent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
         val status = batteryIntent?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
 
-        val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
+        val isCharging =
+            status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
 
         return if (level != -1 && scale != -1) {
             // Calculate battery percentage
@@ -417,43 +347,16 @@ class AnalogWatchCanvasRenderer(
         }
     }
 
-    private fun drawNumberOfSteps(canvas: Canvas, bounds: Rect, s: String, primaryColor: Int) {
-        val stepsPaint = getTextPaint(15f, Paint.Align.LEFT, primaryColor)
-
-        val logoWidth = 20
-        val logoHeight = 20
-        val logoLeft = bounds.right.toFloat() - logoWidth - 60f
-        val logoTop = bounds.centerY() - logoHeight / 2 - 15
-
-
-        val logoDrawable = getLogoDrawable(
-            getLogoDrawable(R.drawable.foot),
-            Constants.BATTERY_HEART_FOOT_COLOR,
-            logoLeft.toInt(),
-            logoTop,
-            (logoLeft + logoWidth).toInt(),
-            (logoTop + logoHeight)
-        )
-
-        logoDrawable.draw(canvas)
-
-        val additionalTextX = logoLeft + logoWidth + 4 // Adjust the horizontal position
-        val additionalTextY = bounds.centerY() + stepsPaint.textSize / 2 - 18 // Center the additional text vertically
-
-        // Draw the additional text
-        canvas.drawText(s, additionalTextX, additionalTextY, stepsPaint)
-    }
-
     private fun drawBatteryPercentage(
         canvas: Canvas,
         bounds: Rect,
         batteryPercentage: Pair<Int, Boolean>,
         primaryColor: Int
     ) {
-        val batteryPaint = getTextPaint(15f, Paint.Align.LEFT, primaryColor)
+        val batteryPaint = getTextPaint(25f, Paint.Align.LEFT, primaryColor)
         val text = "${batteryPercentage.first}%"
-        val textX = 30f // Adjust the horizontal position
-        val textY = centerY - 19f // Adjust the vertical position
+        val textX = centerX + 10 // Adjust the horizontal position
+        val textY = centerY + 185f // Adjust the vertical position
         canvas.drawText(text, textX, textY, batteryPaint)
 
         val batteryDrawable: Int
@@ -476,111 +379,33 @@ class AnalogWatchCanvasRenderer(
             }
         }
 
-        val logoWidth = 20
-        val logoHeight = 20
-        val logoLeft = 10f // Adjust the horizontal position
-        val logoTop = bounds.exactCenterY() - 35f
+        val logoWidth = 40
+        val logoHeight = 40
+        val logoLeft = centerX - 30
+        val logoTop = bounds.exactCenterY() + 155
 
-        val logoDrawable = getLogoDrawable(getLogoDrawable(batteryDrawable), Constants.BATTERY_HEART_FOOT_COLOR, logoLeft.toInt(), logoTop.toInt(), (logoLeft + logoWidth).toInt(), (logoTop + logoHeight).toInt())
+        val logoDrawable = getLogoDrawable(
+            getLogoDrawable(batteryDrawable),
+            Constants.BATTERY_HEART_FOOT_COLOR,
+            logoLeft.toInt(),
+            logoTop.toInt(),
+            (logoLeft + logoWidth).toInt(),
+            (logoTop + logoHeight).toInt()
+        )
 
         if (batteryPercentage.second) {
             logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
         } else {
             if (batteryPercentage.first <= 15) {
-                logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
+                logoDrawable.setTint(Color.RED)
             } else if (batteryPercentage.first <= 50) {
-                logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
+                logoDrawable.setTint(ColorUtils.blendARGB(Color.YELLOW, Color.BLACK, 0.3f))
             } else if (batteryPercentage.first <= 100) {
-                logoDrawable.setTint(Constants.BATTERY_HEART_FOOT_COLOR)
+                logoDrawable.setTint(Color.GREEN)
             }
         }
 
         logoDrawable.draw(canvas)
-    }
-
-    private fun drawCurrentScheduleHabits(
-        canvas: Canvas,
-        habits: ArrayList<String>,
-        secondaryColor: Int
-    ) {
-        val currentSchedulePaint = getTextPaint(15f, Paint.Align.CENTER, secondaryColor)
-        val textOffset = 20f // Adjust vertical spacing between texts
-
-        val startY = canvas.height - currentSchedulePaint.textSize - textOffset * 4
-
-        for (i in habits.indices step 2) {
-            val habit = habits[i]
-
-            val text = when (i) {
-                habits.size - 1 -> habit
-                else -> "$habit | ${habits[i + 1]}"
-            }
-
-            canvas.drawText(
-                text,
-                (canvas.width / 2).toFloat(),
-                startY + textOffset * (i / 2),
-                currentSchedulePaint
-            )
-        }
-    }
-
-    private fun drawNextSchedule(
-        canvas: Canvas,
-        nextScheduleName: String,
-        nextScheduleTime: String,
-        primaryColor: Int
-    ) {
-        val nextSchedulePaint = getTextPaint(12f, Paint.Align.CENTER, primaryColor)
-
-        canvas.drawText(
-            nextScheduleName,
-            (canvas.width / 2).toFloat(),
-            canvas.height - nextSchedulePaint.textSize - 15,
-            nextSchedulePaint
-        )
-
-        canvas.drawText(
-            nextScheduleTime,
-            (canvas.width / 2).toFloat(),
-            canvas.height - nextSchedulePaint.textSize,
-            nextSchedulePaint
-        )
-    }
-
-    /**
-     * This function will display the heartbeat and the logo in the canvas at the left
-     */
-    private fun displayHeartbeatAndLogo(
-        canvas: Canvas,
-        bounds: Rect,
-        heartBeat: String,
-        primaryColor: Int
-    ) {
-        val heartBeatPaint = getTextPaint(15f, Paint.Align.LEFT, primaryColor)
-        val logoWidth = 20
-        val logoHeight = 20
-
-        val logoLeft = bounds.right.toFloat() - logoWidth - 60f // Adjust the horizontal position to the right
-        val logoTop = bounds.centerY() - logoHeight / 2 - 45 // Center the image vertically
-
-
-        val logoDrawable = getLogoDrawable(
-            getLogoDrawable(R.drawable.heartbeat),
-            Constants.BATTERY_HEART_FOOT_COLOR,
-            logoLeft.toInt(),
-            logoTop,
-            (logoLeft + logoWidth).toInt(),
-            (logoTop + logoHeight)
-        )
-
-        logoDrawable.draw(canvas)
-
-        val additionalTextX = logoLeft + logoWidth + 10f // Adjust the horizontal position
-        val additionalTextY = bounds.centerY() + heartBeatPaint.textSize / 2 - 47 // Center the additional text vertically
-
-        // Draw the additional text
-        canvas.drawText(heartBeat, additionalTextX, additionalTextY, heartBeatPaint)
     }
 
     private fun getLogoDrawable(
@@ -596,110 +421,60 @@ class AnalogWatchCanvasRenderer(
         return drawable
     }
 
-    /**
-     * This function will draw the progress arc in the canvas at the top
-     */
-    private fun drawProgressArc(
-        canvas: Canvas,
-        bounds: Rect,
-        progress: Float,
-        timePassed: String,
-        timeLeft: String,
-        interval: Int,
-        primaryColor: Int,
-        secondaryColor: Int
-    ) {
-        val paint = Paint().apply {
-            isAntiAlias = true
-            color = secondaryColor // Customize the arc color
-            style = Paint.Style.STROKE // Use STROKE to create an outline
-            strokeWidth = 10f // Adjust stroke width as needed
-            strokeCap = Paint.Cap.ROUND // Use ROUND for rounded ends
-        }
-
-        val totalPathPaint = Paint().apply {
-            isAntiAlias = true
-            color = Color.argb(128, 128, 128, 128) // Adjust alpha for desired transparency
-            style = Paint.Style.STROKE
-            strokeWidth = 15f // Adjust stroke width as needed
-            strokeCap = Paint.Cap.ROUND
-        }
-
-        val linePaint = Paint().apply {
-            isAntiAlias = true
-            color = Color.argb(128, 128, 128, 128) // Color of the radial lines
-            style = Paint.Style.STROKE
-            strokeWidth = 1f // Adjust line stroke width as needed
-            strokeCap = Paint.Cap.ROUND
-        }
-
-        val centerX = bounds.centerX().toFloat()
-        val centerY = bounds.centerY().toFloat()
-
-        val progressRadius = bounds.width() / 2 - 10f // Adjust the radius as needed
-
-        // Draw a hollow arc at the top with outlines and curved corners
-        val arcRect = RectF(
-            centerX - progressRadius,
-            centerY - progressRadius,
-            centerX + progressRadius,
-            centerY + progressRadius
-        )
-
-        canvas.drawArc(arcRect, -120f, 60f, false, totalPathPaint)
-        canvas.drawArc(arcRect, -120f, progress, false, paint) // -90f for top-aligned arc
-
-        // Draw thin radial lines inside the arc
-        for (i in 0 until interval) {
-            val angle = -120f + (i.toFloat() / (interval - 1)) * 60f // Distribute lines evenly inside the arc
-            val startX = centerX + (progressRadius + 6f) * cos(Math.toRadians(angle.toDouble())).toFloat()
-            val startY = centerY + (progressRadius + 6f) * sin(Math.toRadians(angle.toDouble())).toFloat()
-            val endX = centerX + (progressRadius - 7f) * cos(Math.toRadians(angle.toDouble())).toFloat()
-            val endY = centerY + (progressRadius - 7f) * sin(Math.toRadians(angle.toDouble())).toFloat()
-
-            canvas.drawLine(startX, startY, endX, endY, linePaint)
-        }
-
-        val textStartX = centerX - progressRadius * cos(Math.toRadians(120.0)).toFloat() // Adjust horizontal position
-        val textStartY = centerY - progressRadius * sin(Math.toRadians(120.0)).toFloat() + 25f // Adjust vertical position
-
-        val textEndX = centerX + progressRadius * cos(Math.toRadians(-120.0)).toFloat() // Adjust horizontal position
-        val textEndY = centerY + progressRadius * sin(Math.toRadians(-60.0)).toFloat() + 25f // Adjust vertical position
-
-        val textPaint = getTextPaint(10f, Paint.Align.CENTER, primaryColor)
-        canvas.drawText(timeLeft, textStartX, textStartY, textPaint)
-        canvas.drawText(timePassed, textEndX, textEndY, textPaint)
-    }
-
     private fun getLogoDrawable(itemName: Int): Drawable {
         return ContextCompat.getDrawable(context, itemName)!!
-    }
-
-    private fun drawDate(canvas: Canvas, bounds: Rect, primaryColor: Int, currentTime: ZonedDateTime) {
-        val formatter = DateTimeFormatter.ofPattern("E d MMM")
-        val text = currentTime.format(formatter)
-        val datePaint = getTextPaint(20f, Paint.Align.CENTER, primaryColor)
-        val centerYDate = bounds.exactCenterY() + 30
-        canvas.drawText(text, bounds.exactCenterX(), centerYDate, datePaint)
     }
 
     /**
      * This function will draw the time in 24h format in the canvas
      */
-    private fun drawTimeIn24HourFormat(canvas: Canvas, bounds: Rect, primaryColor: Int, currentTime: LocalTime) {
-        val formatter = DateTimeFormatter.ofPattern("HH:mm")
-        val text = currentTime.format(formatter)
-        val timePaint = getTextPaint(80f, Paint.Align.CENTER, primaryColor)
-        canvas.drawText(text, bounds.exactCenterX(), bounds.exactCenterY(), timePaint)
-    }
+    private fun drawTimeIn12HourFormat(
+        canvas: Canvas,
+        bounds: Rect,
+        primaryColor: Int
+    ) {
+        // Get the current time
+        val currentTime = LocalTime.now()
 
-    /**
-     * This function will convert the time in millis to 24h format
-     */
-    private fun convertMillisTo24HourFormat(millis: Long): String {
-        val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-        val date = Date(millis)
-        return dateFormat.format(date)
+        // Format the time to get the full "hh:mm a" string
+        val formatter = DateTimeFormatter.ofPattern("hh:mm a", Locale.getDefault())
+        val text = currentTime.format(formatter)
+
+        // Split the time into two parts: time (e.g., "02:30") and AM/PM (e.g., "PM")
+        val timeText = text.substring(0, text.length - 2)
+        val amPmText = text.substring(text.length - 2)
+
+        // Load Londrina Solid font
+        val londrinaTypeface = ResourcesCompat.getFont(context, R.font.londrina)
+
+        // Create the paint objects for time and AM/PM with Londrina Solid font
+        val timePaint = getTextPaint(90f, Paint.Align.LEFT, primaryColor).apply {
+            typeface = londrinaTypeface
+        }
+        val amPmPaint = getTextPaint(30f, Paint.Align.LEFT, primaryColor).apply {
+            typeface = londrinaTypeface
+        }
+
+        // Measure the width of the time and AM/PM texts
+        val timeWidth = timePaint.measureText(timeText)
+        val amPmWidth = amPmPaint.measureText(amPmText)
+        val spacing = 10 // Adjustable spacing between time and AM/PM
+
+        // Calculate the starting X position to center both texts
+        val totalWidth = timeWidth + amPmWidth + spacing
+        val startX = bounds.exactCenterX() - totalWidth / 2
+
+        val startY = bounds.exactCenterY() - 40
+
+        // Adjust vertical alignment for AM/PM text
+        val fontMetrics = timePaint.fontMetrics
+        val verticalOffset = (fontMetrics.descent - fontMetrics.ascent) / 4
+
+        // Draw the time text
+        canvas.drawText(timeText, startX, startY, timePaint)
+
+        // Draw the AM/PM text right after the time text
+        canvas.drawText(amPmText, startX + timeWidth - 10, startY, amPmPaint)
     }
 
     companion object {
