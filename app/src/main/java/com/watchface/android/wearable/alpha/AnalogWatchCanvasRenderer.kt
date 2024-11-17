@@ -160,7 +160,7 @@ class AnalogWatchCanvasRenderer(
                     )
 
                     var codes = convertDegreesArrayToLocat(
-                        arrayOf(fetchedLocation.latitude, fetchedLocation.longitude),
+                        arrayOf(fetchedLocation.longitude, fetchedLocation.latitude),
                         5
                     )
 

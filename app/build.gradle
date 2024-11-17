@@ -28,7 +28,7 @@ android {
     applicationId "com.watchface.android.wearable.alpha"
     minSdk 30
     targetSdk 33
-    versionCode 6
+    versionCode 8
     versionName "1.0"
   }
 
