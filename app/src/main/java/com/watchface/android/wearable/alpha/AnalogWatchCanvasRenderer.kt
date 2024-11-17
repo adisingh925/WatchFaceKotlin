@@ -197,8 +197,6 @@ class AnalogWatchCanvasRenderer(
 
         Log.d("Location", "codes: ${codes?.split(",")}")
 
-        // [kf, an, kt, jm, wc]
-
         /** comment this code when the actual icons are added*/
         drawIconsCentered(
             canvas,
@@ -215,7 +213,7 @@ class AnalogWatchCanvasRenderer(
     }
 
     fun convertDegreesArrayToLocat(coords: Array<Double>, locatDepth: Int = 5): List<String> {
-        val locatBaseChars = "ABCDEFGHJKMNPQRTVWXY"
+        val locatBaseChars = "0123456789ABCDEFGHJKMNPQRTVWXY"
         val degreesArray = arrayOf(coords[0], coords[1])
         val coordsInt = arrayOf(0, 0)
         val coordsLoc = arrayOf("", "")
@@ -239,18 +237,18 @@ class AnalogWatchCanvasRenderer(
 
             // Convert integer to locBase
             while (coordsInt[i] > 0) {
-                val remainder = coordsInt[i] % 20
+                val remainder = coordsInt[i] % 30
                 coordsLoc[i] = locatBaseChars[remainder] + coordsLoc[i]
-                coordsInt[i] = floor((coordsInt[i] / 20).toDouble()).toInt()
+                coordsInt[i] = floor((coordsInt[i] / 30).toDouble()).toInt()
             }
             while (coordsLoc[i].length < 5) {
-                coordsLoc[i] = "A" + coordsLoc[i]
+                coordsLoc[i] = "0" + coordsLoc[i]
             }
         }
 
         val locArray = mutableListOf<String>()
         for (i in 0 until minOf(coordsLoc[0].length, locatDepth)) {
-            locArray.add("${coordsLoc[1][i]}${coordsLoc[0][i]}".toLowerCase(Locale.ROOT))
+            locArray.add("icon_${coordsLoc[1][i]}${coordsLoc[0][i]}".toLowerCase(Locale.ROOT))
         }
 
         return locArray

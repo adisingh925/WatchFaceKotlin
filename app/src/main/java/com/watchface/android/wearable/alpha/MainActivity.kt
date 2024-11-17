@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             // Permission is already granted
             Log.d(TAG, "Foreground location permission is already granted")
+            updatePermissionStatus(true)
         }
     }
 
