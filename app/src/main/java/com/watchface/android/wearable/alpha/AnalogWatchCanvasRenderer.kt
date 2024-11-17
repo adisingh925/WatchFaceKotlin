@@ -1,27 +1,21 @@
 package com.watchface.android.wearable.alpha
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
-import android.graphics.RectF
-import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.location.Location
 import android.os.BatteryManager
 import android.os.Build
-import android.os.Looper
 import android.util.Log
 import android.view.SurfaceHolder
 import androidx.annotation.RequiresApi
@@ -32,31 +26,17 @@ import androidx.wear.watchface.ComplicationSlotsManager
 import androidx.wear.watchface.Renderer
 import androidx.wear.watchface.WatchState
 import androidx.wear.watchface.style.CurrentUserStyleRepository
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
-import com.watchface.android.wearable.alpha.model.InnerScheduleModel
-import com.watchface.android.wearable.alpha.model.MainSchedule
 import com.watchface.android.wearable.alpha.sharedpreferences.SharedPreferences
-import com.watchface.android.wearable.alpha.utils.AlarmHelper
 import com.watchface.android.wearable.alpha.utils.Constants
-import com.watchface.android.wearable.alpha.utils.JsonParser
-import java.text.SimpleDateFormat
-import java.time.Duration
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Calendar
-import java.util.Date
 import java.util.Locale
-import kotlin.math.cos
 import kotlin.math.floor
-import kotlin.math.sin
-import kotlin.random.Random
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -91,7 +71,6 @@ class AnalogWatchCanvasRenderer(
 
     private val sensorManager by lazy { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
     private val heartRateSensor: Sensor? by lazy { sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE) }
-    private var mainSchedule: MainSchedule = JsonParser(context).readAndParseJsonFile()
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var heartRateValue = 0
     val locationClient = LocationServices.getFusedLocationProviderClient(context)
@@ -107,7 +86,6 @@ class AnalogWatchCanvasRenderer(
     override fun onDestroy() {
         Log.d(TAG, "onDestroy()")
         sensorManager.unregisterListener(this, heartRateSensor)
-        AlarmHelper(context).cancelAllAlarms()
         scope.cancel("DigitalWatchCanvasRenderer scope clear() request")
 
         super.onDestroy()

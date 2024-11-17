@@ -6,7 +6,6 @@ import androidx.activity.ComponentActivity
 import androidx.core.widget.doOnTextChanged
 import com.watchface.android.wearable.alpha.databinding.ActivityWatchFaceConfigBinding
 import com.watchface.android.wearable.alpha.sharedpreferences.SharedPreferences
-import com.watchface.android.wearable.alpha.utils.AlarmHelper
 
 class WatchFaceConfigActivity : ComponentActivity() {
 
@@ -33,7 +32,6 @@ class WatchFaceConfigActivity : ComponentActivity() {
                 SharedPreferences.write("vibration", 1)
             } else {
                 SharedPreferences.write("vibration", 0)
-                AlarmHelper(this).cancelAllAlarms()
             }
         }
 
